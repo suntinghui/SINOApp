@@ -1,0 +1,287 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+		<link href="../css/mui.picker.css" rel="stylesheet" />
+		<link href="../css/mui.poppicker.css" rel="stylesheet" />
+
+		<style>
+			.mui-content {
+				padding: 1% 3%;
+			}
+			
+			#confirmBtn {
+				border: none;
+				width: 45%;
+				font-size: 17px;
+				background: dodgerblue;
+			}
+			
+			#cancelBtn {
+				border: none;
+				width: 45%;
+				font-size: 17px;
+				background: rgba(255,0,0);
+			}
+			
+			.link-area {
+				display: block;
+				margin-top: 0px;
+				text-align: center;
+			}
+			
+			#agreeBtn {
+				width: 45%;
+				color: #FFFFFF;
+			}
+			
+			#knownBtn {
+				width: 45%;
+				border: none;
+			}
+			
+			.btn-custom {
+				color: #fff;
+				border: 1px solid #99ccFF;
+				background-color: #99ccFF;
+			}
+			
+			.btn-custom:enabled:active,
+			.btn-custom.mui-active:enabled {
+				color: #fff;
+				border: 1px solid #6699FF;
+				background-color: #6699FF;
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 class="mui-title">签核</h1>
+		</header>
+
+		<div class="mui-content">
+
+			<div class="mui-input-row mui-plus-visible" style="margin-top: 10px;">
+				<textarea id="contentInput" class="mui-input-clear" rows="5" placeholder="请输入或选择意见"></textarea>
+			</div>
+
+			<h5 style="margin-left: 5px; margin-bottom: 10px;">请选择常用意见：</h5>
+			<h5 id='comOpinionSel' class="mui-btn mui-btn-block select" type='button'>点击选择常用意见</h5>
+			
+			<div class="link-area" style="margin-top: 5%;">
+				<button class="mui-btn btn-custom" id="agreeBtn">同意</button>
+				<button class="mui-btn btn-custom" id="knownBtn" style="margin-left: 5%;">&nbsp;&nbsp;阅&nbsp;&nbsp;</button>
+			</div>
+
+			<div class="link-area" style="margin-top: 5%;">
+				<button class="mui-btn btn-custom" id="cancelBtn">驳回</button>
+				<button class="mui-btn btn-custom" id="confirmBtn" style="margin-left: 5%;">签核</button>
+			</div>
+
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script type="text/javascript" src="../js/string.js"></script>
+		<script src="../js/mui.poppicker.js"></script>
+		<script src="../js/mui.picker.js"></script>
+
+		<script type="text/javascript">
+			mui.init();
+
+			var contentInput = document.getElementById('contentInput');
+			var agreeBtn = document.getElementById('agreeBtn');
+			var knownBtn = document.getElementById('knownBtn');
+			var confirmBtn = document.getElementById('confirmBtn');
+			var cancelBtn = document.getElementById('cancelBtn');
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			var nodeId = '';
+			var flowId = '';
+			var currentOpinion = ""
+
+			window.onload = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					nodeId = self.nodeId;
+					flowId = self.flowId;
+					
+					currentOpinion = self.currentOpinion;
+					contentInput.value = currentOpinion;
+					requestOpinion();
+				});
+			}
+			
+			// 请求常用意见
+			function requestOpinion() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetComOpinion&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseComOpinion(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseComOpinion(resp) {
+				var picker = new mui.PopPicker();
+				picker.setData(getComOpinions(resp));
+
+				comOpinionSel.addEventListener('tap', function(event) {
+					if(resp.length > 0) {
+						picker.show(function(items) {
+							contentInput.value = items[0];
+						});
+					} else {
+						mui.toast('无常用意见可供选择');
+					}
+				});
+
+			}
+
+			function getComOpinions(data) {
+				var list = new Array();
+				for(var i = 0; i < data.length; i++) {
+					list.push(data[i].OpinionText)
+				}
+				return list;
+			}
+
+			agreeBtn.addEventListener('tap', function() {
+				contentInput.value = '同意';
+			}, false);
+
+			knownBtn.addEventListener('tap', function() {
+				contentInput.value = '阅';
+			}, false);
+
+			// 防止用户输入&
+			function getContentValue() {
+				var content = contentInput.value.replace(/&/g, ".");
+				return content;
+			}
+
+			function checkValue() {
+				if(getContentValue().length == 0) {
+					mui.toast('请输入签核意见');
+					return false;
+				}
+
+				return true;
+			}
+
+			confirmBtn.addEventListener('tap', function() {
+				mui.plusReady(function() {
+					if(checkValue()) {
+						mui.confirm('确定要签核吗？', '提示', ['取消', '确认'], function(e) {
+							if(e.index == 1) {
+								requestFlowNext('0');
+							}
+						});
+					}
+				});
+			}, false);
+
+			cancelBtn.addEventListener('tap', function() {
+				mui.plusReady(function() {
+					if(checkValue()) {
+						mui.confirm('确定要驳回吗？', '提示', ['取消', '确认'], function(e) {
+							if(e.index == 1) {
+								requestFlowNext('1');
+							}
+						});
+					}
+				});
+			}, false);
+
+			// 0代表流程通过 1代表流程不通过
+			function requestFlowNext(states) {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var paramDic = {
+					'arg0': flowId,
+					'arg1': nodeId,
+					'arg2': getContentValue(),
+					'arg3': states
+				};
+
+				var data = getWebservicesData('doFlowUpdateQH', paramDic);
+				mui.ajax(PM_WEBSERVICE_URL, {
+					data: data,
+					dataType: 'xml', //服务器返回json格式数据
+					type: 'post', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/soap+xml;charset=UTF-8'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						responseFlowNext(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						//异常处理；
+						console.log(type);
+
+						hideProgressDialog();
+
+						mui.toast('审批出现异常');
+					}
+				});
+			}
+
+			function responseFlowNext(resp) {
+				var xmlStr = (new XMLSerializer()).serializeToString(resp);
+				xmlDoc = new DOMParser().parseFromString(unescapeHTML(xmlStr), "text/xml");
+
+				var result = xmlDoc.getElementsByTagName('return')[0].childNodes[0].nodeValue;
+				var str;
+				if(result == '1') {
+					str = '操作成功';
+				} else {
+					str = '操作失败';
+				}
+
+				mui.alert(str, '提示', function() {
+					closeToList();
+				});
+			}
+		</script>
+	</body>
+
+</html>

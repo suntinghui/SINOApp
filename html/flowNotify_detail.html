@@ -1,0 +1,282 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>详情</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/parse.css" />
+		<link rel="stylesheet" type="text/css" href="../css/mui.picker.css" />
+		<link rel="stylesheet" href="../css/mui.dtpicker.css" />
+		<link href="../css/mui.poppicker.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">知会详情</h1>
+		</header>
+
+		<div class="mui-content">
+			<div id="slider" class="mui-slider mui-fullscreen">
+				<div id="sliderSegmentedControl" class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+					<a class="mui-control-item mui-active" href="#item1">
+						详情信息
+					</a>
+					<a class="mui-control-item" href="#item2">
+						表单信息
+					</a>
+				</div>
+
+				<div id="sliderProgressBar" class="mui-slider-progress-bar mui-col-xs-6"></div>
+
+				<div class="mui-slider-group">
+
+					<!--详情信息-->
+					<div id="item1" class="mui-slider-item mui-control-content mui-active" style="border: none;">
+						<div class="mui-scroll-wrapper scroll-content">
+							<div class="mui-scroll left-content" id="detailInfo">
+							</div>
+						</div>
+					</div>
+
+					<!--表单信息-->
+					<div id="item2" class="mui-slider-item mui-control-content " style="border: none;">
+						<div class="mui-scroll-wrapper scroll-content">
+							<div class="mui-scroll right-content" id="leaderInfo">
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/util.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/parse.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/mui.picker.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+
+		<script type="text/javascript">
+			var needRefresh = false;
+
+			mui.init({
+				beforeback: function() {
+					var self = plus.webview.currentWebview();
+					var listWebViewId = self.listWebViewId;
+
+					var list = plus.webview.getWebviewById(listWebViewId);
+					mui.fire(list, 'refresh', {
+						needRefresh: needRefresh
+					});
+					return true;
+				}
+			});
+
+			mui('.mui-scroll-wrapper').scroll();
+			mui('.scroll-content').scroll({
+				indicators: true //是否显示滚动条
+			});
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			var InstanceId = '';
+			var RecordId = '';
+
+			window.onload = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					InstanceId = self.InstanceId;
+					RecordId = self.RecordId;
+
+					requestDetail();
+
+					requestFormHTML();
+				});
+			};
+
+			// 获取详情
+			function requestDetail() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'FlowNotify.ashx?Commond=GetFlowNotifyDetail&recordId=' + RecordId + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseDetail(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseDetail(resp) {
+				// 首先清空下面的所有结点
+				while(detailInfo.hasChildNodes()) {
+					detailInfo.removeChild(detailInfo.firstChild);
+				}
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+				fragment.appendChild(createInfoItem("知会标题", resp.PassReadTitle));
+				fragment.appendChild(createInfoItem("发布人", exReturnSpace(resp.Publisher)));
+				fragment.appendChild(createInfoItem("发布日期", exReturnSpace(resp.PublishTime)));
+
+				detailInfo.appendChild(fragment);
+
+				requestDocData();
+			}
+
+			// 查询正文数据
+			function requestDocData() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetDocData&instanceId=' + InstanceId;
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseDocData(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseDocData(resp) {
+				if(!isNullStr(resp)) {
+					detailInfo.appendChild(createDownloadItem('正文', '点击查看正文', resp.DownLoadUrl, getDocumentType(resp.ContentType), resp.HtmlContent, resp.Size));
+				} else {
+					detailInfo.appendChild(createInfoItem('正文', '无'));
+				}
+
+				requestAtt();
+			}
+
+			// 查询附件
+			function requestAtt() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'ATTManager.ashx?Commond=GetAttList&busId=' + InstanceId;
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseAtt(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseAtt(data) {
+				if(!isNullStr(data)) {
+					var fragment = document.createDocumentFragment();
+
+					for(var i = 0; i < data.length; i++) {
+						fragment.appendChild(createDownloadItem('附件' + (i + 1), data[i].AttName, data[i].DownLoadUrl, data[i].AttSuffix, data[i].HtmlContent, data[i].AttSize));
+					}
+
+					detailInfo.appendChild(fragment);
+				} else {
+					detailInfo.appendChild(createInfoItem('附件', '无'));
+				}
+				
+				resizeCurrentFont();
+			};
+
+			// 获取表单信息
+			function requestFormHTML() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetFormObj&instanceId=' + InstanceId + '&browModel=1&flowAttr=1&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseFormHTML(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			} // end requestFormHTML
+
+			function responseFormHTML(resp) {
+				var parentdiv = document.getElementById('leaderInfo');
+				var fragment = parseForm(resp, '1', '0');
+				parentdiv.appendChild(fragment);
+				
+				resizeCurrentFont();
+			} // end responseFormHTML
+		</script>
+
+		<script>
+			function resizeCurrentFont() {
+				resizeFont('.title', 17);
+				resizeFont('.content-title', 16);
+				resizeFont('.item-name', 16);
+				resizeFont('.item-value', 16);
+			}
+		</script>
+
+	</body>
+
+</html>

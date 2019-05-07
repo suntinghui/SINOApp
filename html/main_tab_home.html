@@ -1,0 +1,332 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>路建移动办公</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+
+		<style>
+			.img {
+				width: 50%;
+				height: 50%;
+			}
+			
+			.mui-media-body {
+				font-family: "微软雅黑";
+			}
+			
+			.mybadge {
+				margin-top: -32px;
+				margin-right: 10px;
+				visibility: hidden;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a id="backCon" class=" mui-icon mui-icon-left-nav mui-pull-left backbtn" style="display: none;"></a>
+			<h1 id="title" class="mui-title">移动办公</h1>
+		</header>
+
+		<div class="mui-content">
+			<ul class="mui-table-view mui-grid-view mui-grid-9" style="background-color: rgba(255,255,255,0); margin-top: 0px;">
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px;">
+					<a href="javascript:void(0)" id="docManager_list.html">
+						<img src="../img/icon_1.png" class="img" />
+						<div class="mui-media-body resizeFont">公文管理</div>
+					</a>
+					<span id="DocHandingCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px;">
+					<a href="javascript:void(0)" id="memo_list.html">
+						<img src="../img/icon_2.png" class="img" />
+						<div class="mui-media-body resizeFont">便函管理</div>
+					</a>
+					<span id="MemoHandingCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px;">
+					<a href="javascript:void(0)" id="flowManager_list.html">
+						<img src="../img/icon_3.png" class="img" />
+						<div class="mui-media-body resizeFont">事务管理</div>
+					</a>
+					<span id="FlowHandingCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px;">
+					<a href="javascript:void(0)" id="passReadRecord_list.html">
+						<img src="../img/icon_4.png" class="img" />
+						<div class="mui-media-body resizeFont">传阅文件</div>
+					</a>
+					<span id="NoReadPassReadCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px;">
+					<a href="javascript:void(0)" id="flowNotify_list.html">
+						<img src="../img/icon_5.png" class="img" />
+						<div class="mui-media-body resizeFont">知会文件</div>
+					</a>
+					<span id="NoReadFlowNotifyCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px;">
+					<a href="javascript:void(0)" id="noticeManager_list.html">
+						<img src="../img/icon_6.png" class="img" />
+						<div class="mui-media-body resizeFont">通知公告</div>
+					</a>
+					<span id="NewNoticeCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px;">
+					<a href="javascript:void(0)" id="projectManager_list.html">
+						<img src="../img/icon_7.png" class="img" />
+						<div class="mui-media-body resizeFont">项目管理</div>
+					</a>
+					<span id="PMCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px;">
+					<a href="javascript:void(0)" id="corpPlanManager_list.html">
+						<img src="../img/icon_8.png" class="img" />
+						<div class="mui-media-body resizeFont">企划管理</div>
+					</a>
+					<span id="QHCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px;">
+					<a href="javascript:void(0)" id="fundManager_list.html">
+						<img src="../img/icon_9.png" class="img" />
+						<div class="mui-media-body resizeFont">资金管理</div>
+					</a>
+					<span id="FundCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px; display: none;">
+					<a href="javascript:void(0)" id="EXPERT_SERV">
+						<img src="../img/icon_10.png" class="img" />
+						<div class="mui-media-body resizeFont" id="ex9">专家服务</div>
+					</a>
+					<span id="expertCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px; display: none;">
+					<a href="javascript:void(0)" id="PROGRAM_AUDIT">
+						<img src="../img/icon_11.png" class="img" />
+						<div class="mui-media-body resizeFont" id="ex10">方案审批</div>
+					</a>
+					<span id="technicCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-3" style="border-width: 0px; display: none;">
+					<a href="javascript:void(0)" id="SHARE_CENTER">
+						<img src="../img/icon_12.png" class="img" />
+						<div class="mui-media-body resizeFont" id="ex10">财务共享</div>
+					</a>
+					<span id="financeCount" class="mui-badge mui-badge-danger mybadge">0</span>
+				</li>
+
+				<!--注意view.js中的array-->
+
+			</ul>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/util.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/badge.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+
+		<script>
+			mui.init({
+					keyEventBind: {
+						backbutton: false
+					}
+				}
+
+			);
+			window.onload = function() {
+				window.setTimeout(requestBadge, 1000);
+			}
+
+			;
+			// 宫格点击事件
+			mui('.mui-grid-view').on('tap', 'a', function(e) {
+					var id = this.getAttribute("id");
+					var htmlName = this.getElementsByTagName('div')[0].innerHTML;
+					mui.plusReady(function() {
+						if(isNullStr(id)) {
+							mui.toast("建设中，请稍候...");
+							return;
+						}
+						var indexPos = id.indexOf('http');
+						if(indexPos == 0) {
+							// 表示以http开头
+							openURL(htmlName, id);
+						} else if(id == 'EXPERT_SERV') {
+							// 专家服务
+							id = 'http://lqexp.crbcint.com:8089/crbcexpmobile/sys/Login_dologin.action?param1=' + window.localStorage.getItem(LoginName) + '&param2=' + window.localStorage.getItem(PwdCyp);
+							console.log(id);
+							openURL(htmlName, id);
+						} else if(id == 'PROGRAM_AUDIT') {
+							// 方案审批
+							id = 'http://lqexp.crbcint.com:8088/crbcmobile/sys/loginMobile_mobiledologin.action?param1=' + window.localStorage.getItem(LoginName) + '&param2=' + window.localStorage.getItem(PwdCyp);
+							console.log(id);
+							openURL(htmlName, id);
+						} else if(id == "SHARE_CENTER") {
+							// 财务共享
+							id = 'http://gxapp.crbcint.com/cwbase/webapp/TransferPageForCloud.aspx?AuthType=UserMap&AppCode=0002&UserCode=' + window.localStorage.getItem(LoginName) + '&url=/cwbase/webapp/gspwf/ApprovalCenterPhone.htm';
+							console.log(id);
+							openURL(htmlName, id);
+						} else {
+							var self = plus.webview.currentWebview();
+							var sub = plus.webview.create(id, id, {
+								top: '0px',
+								bottom: '0px'
+							});
+							self.append(sub);
+						}
+					});
+				}
+
+			);
+
+			function openURL(title, id) {
+				mui.plusReady(function() {
+					var sub = plus.webview.create(id, id, {
+						top: '44px',
+						bottom: '0px'
+					});
+					sub.addEventListener('close', function() {
+						document.getElementById('backCon').style.display = 'none';
+						document.getElementById('title').innerHTML = '移动办公';
+					});
+					sub.addEventListener('loading', function() {
+						document.getElementById('backCon').style.display = 'inline';
+						document.getElementById('title').innerHTML = title;
+						document.getElementById('backCon').addEventListener('tap', function() {
+							sub.close();
+						}, false);
+					});
+					sub.show();
+				});
+			}
+
+			window.addEventListener('requestBadge', function(event) {
+					requestBadge();
+				}
+
+			);
+
+			function refreshBadge(resp) {
+				// 公文待办
+				var DocHandingCount = document.getElementById('DocHandingCount');
+				DocHandingCount.innerHTML = resp.DocHandingCount;
+				DocHandingCount.style.visibility = (resp.DocHandingCount == 0 ? "hidden" : "visible");
+				totalBadgeNum += resp.DocHandingCount;
+				// 便函待办
+				var MemoHandingCount = document.getElementById('MemoHandingCount');
+				MemoHandingCount.innerHTML = resp.MemoHandingCount;
+				MemoHandingCount.style.visibility = (resp.MemoHandingCount == 0 ? "hidden" : "visible");
+				totalBadgeNum += resp.MemoHandingCount;
+				// 工作流待办
+				var FlowHandingCount = document.getElementById('FlowHandingCount');
+				FlowHandingCount.innerHTML = resp.FlowHandingCount;
+				FlowHandingCount.style.visibility = (resp.FlowHandingCount == 0 ? "hidden" : "visible");
+				totalBadgeNum += resp.FlowHandingCount;
+				// 未读通知＋最新信息
+				var NewNoticeCount = document.getElementById('NewNoticeCount');
+				//var noticeCount = resp.NewNoticeCount + resp.NewInformationCount;
+				var noticeCount = resp.NewNoticeCount;
+				NewNoticeCount.innerHTML = noticeCount;
+				NewNoticeCount.style.visibility = (noticeCount == 0 ? "hidden" : "visible");
+				totalBadgeNum += noticeCount;
+				// 未读传阅
+				var NoReadPassReadCount = document.getElementById('NoReadPassReadCount');
+				NoReadPassReadCount.innerHTML = resp.NoReadPassReadCount;
+				NoReadPassReadCount.style.visibility = (resp.NoReadPassReadCount == 0 ? "hidden" : "visible");
+				totalBadgeNum += resp.NoReadPassReadCount;
+				// 未读知会
+				var NoReadFlowNotifyCount = document.getElementById('NoReadFlowNotifyCount');
+				NoReadFlowNotifyCount.innerHTML = resp.NoReadFlowNotifyCount;
+				NoReadFlowNotifyCount.style.visibility = (resp.NoReadFlowNotifyCount == 0 ? "hidden" : "visible");
+				totalBadgeNum += resp.NoReadFlowNotifyCount;
+				mui.plusReady(function() {
+					plus.runtime.setBadgeNumber(totalBadgeNum);
+				});
+			}
+
+			function refreshPMBadge(data) {
+				var xmlStr = (new XMLSerializer()).serializeToString(data);
+				var xmlDoc = new DOMParser().parseFromString(unescapeHTML(xmlStr), "text/xml");
+				var count = xmlDoc.getElementsByTagName("flownum")[0].childNodes[0].nodeValue;
+				// 未读知会
+				var PMCount = document.getElementById('PMCount');
+				PMCount.innerHTML = count;
+				PMCount.style.visibility = (count == 0 ? "hidden" : "visible");
+				mui.plusReady(function() {
+					totalBadgeNum += (count - 0);
+					plus.runtime.setBadgeNumber(totalBadgeNum);
+				});
+			}
+			
+			// 企划
+			function refreshQHBadge(data) {
+				var xmlStr = (new XMLSerializer()).serializeToString(data);
+				var xmlDoc = new DOMParser().parseFromString(unescapeHTML(xmlStr), "text/xml");
+				var count = xmlDoc.getElementsByTagName("flownum")[0].childNodes[0].nodeValue;
+				// 未读知会
+				var QHCount = document.getElementById('QHCount');
+				QHCount.innerHTML = count;
+				QHCount.style.visibility = (count == 0 ? "hidden" : "visible");
+				mui.plusReady(function() {
+					totalBadgeNum += (count - 0);
+					plus.runtime.setBadgeNumber(totalBadgeNum);
+				});
+			}
+
+			function refreshFundBadge(resp) {
+				var FundCount = document.getElementById('FundCount');
+				FundCount.innerHTML = resp.num;
+				FundCount.style.visibility = (resp.num == 0 ? "hidden" : "visible");
+				mui.plusReady(function() {
+					totalBadgeNum += (resp.num - 0);
+					plus.runtime.setBadgeNumber(totalBadgeNum);
+				});
+			}
+
+			function refreshExBadge(resp) {
+				console.log(JSON.stringify(resp));
+				var expertCount = document.getElementById('expertCount');
+				expertCount.innerHTML = resp.expert;
+				expertCount.style.visibility = (resp.expert == 0 ? "hidden" : "visible");
+				var technicCount = document.getElementById('technicCount');
+				technicCount.innerHTML = resp.technic;
+				technicCount.style.visibility = (resp.technic == 0 ? "hidden" : "visible");
+				mui.plusReady(function() {
+					totalBadgeNum += (resp.expert - 0);
+					totalBadgeNum += (resp.technic - 0);
+					plus.runtime.setBadgeNumber(totalBadgeNum);
+				});
+			}
+			
+			function refreshFinanceBadge(resp) {
+				console.log(JSON.stringify(resp));
+				
+				var financeCount = document.getElementById('financeCount');
+				financeCount.innerHTML = resp.count;
+				financeCount.style.visibility = (resp.count == 0 ? "hidden" : "visible");
+				
+				mui.plusReady(function() {
+					totalBadgeNum += (resp.count - 0);
+					plus.runtime.setBadgeNumber(totalBadgeNum);
+				});
+			}
+			
+		</script>
+
+		<script>
+			(function resizeCurrentFont() {
+				resizeFont('.resizeFont', 15);
+			})();
+		</script>
+
+	</body>
+
+</html>

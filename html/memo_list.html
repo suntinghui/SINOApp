@@ -1,0 +1,758 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>便函管理</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../css/mui.picker.css" rel="stylesheet" />
+		<link href="../css/mui.poppicker.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/oa.css" />
+		<link rel="stylesheet" href="../css/pullrefresh.css" />
+
+		<style>
+			.title {
+				color: #333333;
+				font-size: 16px;
+				font-family: "微软雅黑";
+			}
+			
+			.state {
+				font-size: 16px;
+				float: left;
+				color: #6699FF;
+				font-family: "微软雅黑";
+			}
+			
+			.name {
+				font-size: 15px;
+				float: left;
+				margin-top: 5px;
+				color: #666666;
+				font-family: "微软雅黑";
+			}
+			
+			.date {
+				font-size: 15px;
+				float: right;
+				margin-top: 5px;
+				color: #666666;
+			}
+			
+			.titleyao {
+				color: #444444;
+				font-size: 16px;
+			}
+			
+			.dateyao {
+				font-size: 15px;
+				float: right;
+				margin-top: 5px;
+				color: #4A87B6;
+			}
+			
+			h5 {
+				margin-top: 10px;
+				margin-bottom: 10px;
+			}
+			
+			.select {
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 16px;
+				text-align: left;
+				padding-left: 15px;
+			}
+			
+			.oabtn {
+				margin-top: 30px;
+				border: none;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 17px;
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">便函管理</h1>
+		</header>
+
+		<div class="mui-content">
+			<div id="slider" class="mui-slider mui-fullscreen">
+				<div id="sliderSegmentedControl" class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+					<a class="mui-control-item mui-active" href="#item1">
+						待办文件
+					</a>
+					<a class="mui-control-item" href="#item2">
+						已办文件
+					</a>
+					<a class="mui-control-item" href="#item3">
+						起草
+					</a>
+				</div>
+
+				<div id="sliderProgressBar" class="mui-slider-progress-bar mui-col-xs-4"></div>
+
+				<div class="mui-slider-group">
+					<!--待办事务-->
+					<div id="item1" class="mui-slider-item mui-control-content mui-active" style="border: none;">
+						<div class="mui-scroll-wrapper">
+							<div class="mui-scroll" id="newPullrefresh">
+								<div id="nodata1" style="margin-top: 30px; display: none; text-align: center;">
+									<img src="../img/nodata.png" style="width: 150px; height: 150px;" />
+								</div>
+								<ul class="mui-table-view mui-table-view-striped mui-table-view-condensed" id="newList" style="margin-top: 0px;">
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<!--已办事务-->
+					<div id="item2" class="mui-slider-item mui-control-content" style="border: none;">
+						<div class="mui-scroll-wrapper">
+							<div class="mui-scroll" id="oldPullrefresh">
+								<div id="nodata2" style="margin-top: 30px; display: none; text-align: center;">
+									<img src="../img/nodata.png" style="width: 150px; height: 150px;" />
+								</div>
+								<ul class="mui-table-view mui-table-view-striped mui-table-view-condensed" id="oldList" style="margin-top: 0px;">
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<!-- 起草 -->
+					<div id="item3" class="mui-slider-item mui-control-content" style="border: none;">
+						<div class="mui-scroll-wrapper">
+							<div class="mui-scroll" id="document_new" style="padding: 10px;">
+								<h5 class="mui-plus-visible mui-content-padded">事务标题：</h5>
+								<div class="mui-input-row mui-plus-visible">
+									<textarea id="flowTitleInput" rows="3" placeholder="请输入事务标题" maxlength="50"></textarea>
+								</div>
+
+								<h5 class="mui-plus-visible mui-content-padded">事务分类：</h5>
+								<button id='flowClassSel' class="mui-btn mui-btn-block select" type='button'>请选择事务分类</button>
+
+								<h5 class="mui-plus-visible mui-content-padded">事务类型：</h5>
+								<button id='flowTypeSel' class="mui-btn mui-btn-block select" type='button'>请选择事务类型</button>
+
+								<h5 class="mui-plus-visible mui-content-padded">流程模板：</h5>
+								<button id='flowTemplateSel' class="mui-btn mui-btn-block select" type='button'>请选择流程模板</button>
+
+								<button id='nextBtn' class="mui-btn mui-btn-block mui-btn-primary oabtn">下一步</button>
+
+								<button id='resetBtn' class="mui-btn mui-btn-block mui-btn-primary oabtn">重置</button>
+								
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script src="../js/mui.poppicker.js"></script>
+		<script src="../js/mui.picker.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script src="../js/mui.pullToRefresh.js"></script>
+		<script src="../js/mui.pullToRefresh.material.js"></script>
+
+		<script>
+			mui.init({
+				swipeBack: false
+			});
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					backAndRefreshBadge();
+
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			var newPullupRefresh = null;
+			var newPulldownRefresh = null;
+
+			var oldPullupRefresh = null;
+			var oldPulldownRefresh = null;
+
+			(function($) {
+				//阻尼系数
+				var deceleration = mui.os.ios ? 0.003 : 0.0009;
+				$('.mui-scroll-wrapper').scroll({
+					bounce: false,
+					indicators: true, //是否显示滚动条
+					deceleration: deceleration
+				});
+
+				$.ready(function() {
+					$('#newPullrefresh').pullToRefresh({
+						down: {
+							callback: function() {
+								newPulldownRefresh = this;
+
+								var list = document.getElementById("newList");
+								// 首先清空下面的所有结点
+								while(list.hasChildNodes()) {
+									list.removeChild(list.firstChild);
+								}
+
+								newCurrentPage = 1;
+								requestNewList();
+							}
+						},
+						up: {
+							auto: true,
+							callback: function() {
+								newPullupRefresh = this;
+
+								newCurrentPage++;
+								requestNewList();
+							}
+						}
+					});
+
+					$('#oldPullrefresh').pullToRefresh({
+						down: {
+							callback: function() {
+								oldPulldownRefresh = this;
+
+								var list = document.getElementById("oldList");
+								// 首先清空下面的所有结点
+								while(list.hasChildNodes()) {
+									list.removeChild(list.firstChild);
+								}
+
+								oldCurrentPage = 1;
+								requestOldList();
+							}
+						},
+						up: {
+							auto: true,
+							callback: function() {
+								oldPullupRefresh = this;
+
+								oldCurrentPage++;
+								requestOldList();
+							}
+						}
+					});
+
+				});
+			})(mui);
+
+			// searchInfo可以通用
+			var searchInfo = {
+				RecordId: "",
+				InstanceId: "",
+				Instance: {
+					InstanceId: "",
+					FlowTitle: "",
+					FlowTypeId: "",
+					FlowTypeName: "",
+					DrafterName: "",
+					CreateDate: "",
+					SearchStartDate: "",
+					SearchEndDate: ""
+				},
+				Hander: "",
+				Role: "",
+				FEG_30_COL_30: "",
+				FEG_30_COL_40: "",
+				FEG_30_COL_50: "",
+				FEG_30_COL_90: "",
+				FEG_30_COL_100: "",
+				FEG_30_COL_110: "",
+				FEG_30_COL_125: "",
+				FEG_30_COL_180: "",
+				FEG_30_COL_190: "",
+				FEG_30_COL_200: "",
+				FEG_30_COL_9994: ""
+			};
+		</script>
+
+		<!--查询待办列表-->
+		<script>
+			var newCurrentPage = 0; // 当前页码
+			var newTotalPages = 1; // 总页数
+
+			function requestNewList() {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var pageInfo = {
+					CurrentPage: newCurrentPage,
+					PageSize: PAGE_SIZE
+				};
+
+				var url = getHost() + "Memo.ashx?Commond=GetHandingList&pageInfo=" + JSON.stringify(pageInfo) + "&searchInfo=" + JSON.stringify(searchInfo) + "&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseNewList(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+
+			};
+
+			function responseNewList(resp) {
+				if(resp.ListRecord.length == 0) {
+					document.getElementById('nodata1').style.display = 'block';
+					document.getElementById('newList').style.display = 'none';
+					newPullupRefresh.pullUpTips.style.display = 'none';
+					return;
+				}
+
+				document.getElementById('nodata1').style.display = 'none';
+				document.getElementById('newList').style.display = 'block';
+
+				newTotalPages = Math.ceil(resp.PageInfo.TotalRecordSize / PAGE_SIZE);
+
+				var list = document.getElementById("newList");
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+
+				var li;
+				for(var i = 0; i < resp.ListRecord.length; i++) {
+					var record = resp.ListRecord[i];
+					li = document.createElement('li');
+					li.className = 'mui-table-view-cell';
+					li.id = record.InstanceId + "#" + record.RecordId+"#"+(isNullStr(record.ISBACK) ? "" : record.ISBACK);
+					li.innerHTML = '<div class="mui-table mui-navigate-right"><div class="mui-table-cell mui-col-xs-11">'+getCB(record.cb)+'<p class="state" style="color:' + getFlowStateColor(record.FEG_30_COL_190) + ';">[' + getFlowState(record.FEG_30_COL_190) + ']&nbsp;&nbsp;</p><p class="title">' + record.Instance.FlowTitle + '</p><span class="date">' + record.Instance.DrafterName + '&nbsp;&nbsp;' + record.FEG_30_COL_9994 + '</span></div></div>';
+					fragment.appendChild(li);
+				}
+				list.appendChild(fragment);
+
+				resizeCurrentFont();
+
+				if(newPulldownRefresh != null) {
+					newPulldownRefresh.endPullDownToRefresh();
+				}
+
+				if(newPullupRefresh != null) {
+					newPullupRefresh.endPullUpToRefresh((newCurrentPage >= newTotalPages));
+				}
+			};
+
+			mui('#newList').on('tap', 'li', function(e) {
+				var idparam = this.getAttribute("id").split('#');
+				var extra = {
+					InstanceId: idparam[0],
+					RecordId: idparam[1],
+					isBack:idparam[2],
+					browModel: '0',
+					flowAttr: '3',
+				};
+
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('flowManager_detail_ex.html', Math.random() + '', subpage_style, extra);
+					self.parent().append(sub);
+				});
+			});
+		</script>
+
+		<!--查询已办列表-->
+		<script>
+			var oldCurrentPage = 0; // 当前页码
+			var oldTotalPages = 1; // 总页数
+
+			function requestOldList() {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var pageInfo = {
+					CurrentPage: oldCurrentPage,
+					PageSize: PAGE_SIZE
+				};
+
+				var url = getHost() + "Memo.ashx?Commond=GetHisList&pageInfo=" + JSON.stringify(pageInfo) + "&searchInfo=" + JSON.stringify(searchInfo) + "&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseOldList(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+
+			};
+
+			function responseOldList(resp) {
+				if(resp.ListRecord.length == 0) {
+					document.getElementById('nodata2').style.display = 'block';
+					document.getElementById('oldList').style.display = 'none';
+					oldPullupRefresh.pullUpTips.style.display = 'none';
+					return;
+				}
+
+				document.getElementById('nodata2').style.display = 'none';
+				document.getElementById('oldList').style.display = 'block';
+
+				oldTotalPages = Math.ceil(resp.PageInfo.TotalRecordSize / PAGE_SIZE);
+
+				var list = document.getElementById("oldList");
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+
+				var li;
+				for(var i = 0; i < resp.ListRecord.length; i++) {
+					var record = resp.ListRecord[i];
+					li = document.createElement('li');
+					li.className = 'mui-table-view-cell';
+					li.id = record.InstanceId + "#" + record.RecordId+"#"+(isNullStr(record.ISBACK) ? "" : record.ISBACK);
+					li.innerHTML = '<div class="mui-table mui-navigate-right"><div class="mui-table-cell mui-col-xs-11"><p class="title">' + record.Instance.FlowTitle + '</p><span class="date">' + record.FEG_30_COL_200 + '</span></div></div>';
+					fragment.appendChild(li);
+				}
+				list.appendChild(fragment);
+
+				resizeCurrentFont();
+
+				if(oldPulldownRefresh != null) {
+					oldPulldownRefresh.endPullDownToRefresh();
+				}
+
+				if(oldPullupRefresh != null) {
+					oldPullupRefresh.endPullUpToRefresh((oldCurrentPage >= oldTotalPages));
+				}
+			};
+
+			mui('#oldList').on('tap', 'li', function(e) {
+				var idparam = this.getAttribute("id").split('#');
+				var extra = {
+					InstanceId: idparam[0],
+					RecordId: idparam[1],
+					isBack:idparam[2],
+					browModel: '1',
+					flowAttr: '3',
+				};
+
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('flowManager_detail_ex.html', Math.random() + '', subpage_style, extra);
+					self.parent().append(sub);
+				});
+			});
+		</script>
+
+		<!-- 起草相关 -->
+		<script>
+			var flowTitleInput = document.getElementById('flowTitleInput');
+			var flowClassSel = document.getElementById('flowClassSel');
+			var flowTypeSel = document.getElementById('flowTypeSel');
+			var flowTemplateSel = document.getElementById('flowTemplateSel');
+
+			var flowClassId = ''; // 事务分类
+			var flowTypeId = ''; // 事务类型
+			var flowTemplateId = ''; // 流程模板
+
+			flowClassSel.addEventListener('tap', function(event) {
+				requestFlowClass();
+			}, false);
+
+			flowTypeSel.addEventListener('tap', function(event) {
+				requestFlowClassType();
+			}, false);
+
+			flowTemplateSel.addEventListener('tap', function(event) {
+				requestFlowTemplate();
+			}, false);
+
+			// 查询事物分类
+			// specialTypeFlag 流程类型标志 工作流=1,公文=2,便函=3
+			function requestFlowClass() {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + "WorkFlow.ashx?Commond=GetFlowClass&specialTypeFlag=3&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseFlowClass(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			};
+
+			function responseFlowClass(data) {
+				var str = JSON.stringify(data).replace(/FlowClassName/g, "text").replace(/FlowClassId/g, "value");
+				var userPicker = new mui.PopPicker();
+				userPicker.setData(JSON.parse(str));
+
+				userPicker.show(function(items) {
+					flowClassSel.innerHTML = items[0].text;
+					flowClassId = items[0].value;
+				});
+			};
+
+			// 查询事物类型
+			// specialTypeFlag 流程类型标志 工作流=1,公文=2,便函=3
+			function requestFlowClassType() {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + "WorkFlow.ashx?Commond=GetFlowType&specialTypeFlag=3&flowClassId=" + flowClassId + "&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseFlowClassType(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			};
+
+			function responseFlowClassType(data) {
+				var str = JSON.stringify(data).replace(/FlowTypeName/g, "text").replace(/FLowTypeId/g, "value");
+				var userPicker = new mui.PopPicker();
+				userPicker.setData(JSON.parse(str));
+				userPicker.show(function(items) {
+					flowTypeSel.innerHTML = items[0].text;
+					flowTypeId = items[0].value;
+				});
+			};
+
+			// 查询事物流程模板
+			function requestFlowTemplate() {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + "WorkFlow.ashx?Commond=GetFlowTemplate&flowTypeId=" + flowTypeId + "&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseFlowTemplate(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			};
+
+			function responseFlowTemplate(data) {
+				var str = JSON.stringify(data).replace(/TemplateName/g, "text").replace(/TemplateId/g, "value");
+				var userPicker = new mui.PopPicker();
+				userPicker.setData(JSON.parse(str));
+				userPicker.show(function(items) {
+					if(typeof(items[0].text) == 'undefined') {
+						mui.toast('您可能没有起草权限，请核实')
+						flowTemplateSel.innerHTML = '请选择流程模板';
+						flowTemplateId = '';
+
+					} else {
+						flowTemplateSel.innerHTML = items[0].text;
+						flowTemplateId = items[0].value;
+						//自动生成标题
+						if(flowTitleInput.value=="")
+						{
+							var depName=window.localStorage.getItem(DEPNAME);
+							var curUserName=window.localStorage.getItem(UserName);
+							var title=depName+"-"+curUserName+"-"+items[0].text+getyyyyMMdd(new Date());
+							flowTitleInput.value=title;
+						}
+					}
+
+				});
+			};
+
+			document.getElementById('nextBtn').addEventListener('tap', function() {
+				if(!checkNewInput())
+					return;
+
+				requestDoStartFlow();
+
+			}, false);
+			
+			document.getElementById('resetBtn').addEventListener('tap', function() {
+				flowTitleInput.value = '';
+				flowClassSel.innerHTML = '请选择事务分类';
+				flowTypeSel.innerHTML = '请选择事务类型';
+				flowTemplateSel.innerHTML = '请选择流程模板';
+
+				flowClassId = '';
+				flowTypeId = '';
+				flowTemplateId = '';
+			}, false);
+
+			function checkNewInput() {
+				if(flowTitleInput.value.length < 1) {
+					mui.toast('请输入事务标题');
+					return false;
+				}
+				if(flowClassId.length == 0) {
+					mui.toast('请选择事务分类');
+					return false;
+				}
+				if(flowTypeId.length == 0) {
+					mui.toast('请选择事务类型');
+					return false;
+				}
+				if(isNullStr(flowTemplateId)) {
+					mui.toast('请选择流程模板');
+					return false;
+				}
+
+				return true;
+			};
+
+			// 启动工作流
+			function requestDoStartFlow() {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var startFlowArgs = {
+					OutPutInstanceId: "",
+					OutPutRecordId: "",
+					OutPutMess: "",
+					TransTitle: flowTitleInput.value,
+					FlowTypeId: flowTypeId,
+					FlowTemplateId: flowTemplateId
+				};
+
+				var url = getHost() + "WorkFlow.ashx?Commond=DoStartFlow&startFlowArgs=" + JSON.stringify(startFlowArgs) + "&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseDoStartFlow(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseDoStartFlow(data) {
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					data['flowAttr'] = '3';
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('flowManager_draft.html', 'flowManager_draft.html', subpage_style, data);
+					self.parent().append(sub);
+				});
+			}
+		</script>
+
+		<script>
+			function resizeCurrentFont() {
+				resizeFont('.title', 16);
+				resizeFont('.state', 16);
+				resizeFont('.name', 15);
+				resizeFont('.date', 15);
+				resizeFont('.titleyao', 16);
+				resizeFont('.dateyao', 15);
+				resizeFont('.select', 16);
+				resizeFont('input', 15);
+			}
+		</script>
+
+	</body>
+
+</html>

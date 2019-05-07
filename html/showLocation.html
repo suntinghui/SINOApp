@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<style type="text/css">
+			body,
+			html,
+			.mui-content,
+			#allmap {
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				margin: 0;
+				font-family: "微软雅黑";
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">公司位置</h1>
+		</header>
+
+		<div class="mui-content">
+			<div id="allmap"></div>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=x1C7K385dRjOuugisRHZuAkyoU9Cnm06"></script>
+		<script type="text/javascript" src="../js/constants.js" ></script>
+		<script type="text/javascript" src="../js/util.js" ></script>
+		<script type="text/javascript" src="../js/view.js" ></script>
+
+		<script type="text/javascript">
+			mui.init()
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			var map = new BMap.Map("allmap");
+			mui.plusReady(function() {
+				var self = plus.webview.currentWebview();
+				// 百度地图API功能
+
+				var point = new BMap.Point(116.442605, 39.943127);
+				map.centerAndZoom(point, 18);
+				// 添加点
+				var marker = new BMap.Marker(point); // 创建标注
+				map.addOverlay(marker); // 将标注添加到地图中
+
+				addCopyrightControl();
+				addLocationControl();
+			});
+
+			function addCopyrightControl() {
+				// 版权说明
+				var copyCtrl = new BMap.CopyrightControl({
+					anchor: BMAP_ANCHOR_BOTTOM_RIGHT
+				});
+				copyCtrl.addCopyright({
+					id: 1,
+					content: "版权说明：中交路桥建设有限公司"
+				});
+				map.addControl(copyCtrl);
+			}
+
+			function addLocationControl() {
+				// 添加带有定位的导航控件
+				var navigationControl = new BMap.NavigationControl({
+					// 靠左上角位置
+					anchor: BMAP_ANCHOR_TOP_LEFT,
+					// LARGE类型
+					type: BMAP_NAVIGATION_CONTROL_LARGE,
+					// 启用显示定位
+					enableGeolocation: true
+				});
+				map.addControl(navigationControl);
+
+				// 添加定位控件
+				var geolocationControl = new BMap.GeolocationControl();
+				geolocationControl.addEventListener("locationSuccess", function(e) {
+					// 定位成功事件
+					var address = '';
+					address += e.addressComponent.province;
+					address += e.addressComponent.city;
+					address += e.addressComponent.district;
+					address += e.addressComponent.street;
+					address += e.addressComponent.streetNumber;
+					console.log('当前位置：' + address);
+				});
+				geolocationControl.addEventListener("locationError", function(e) {
+					// 定位失败事件
+					console.log('定位失败：' + e.message);
+				});
+				map.addControl(geolocationControl);
+			}
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>修改密码</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+
+		<style>
+			.mui-content {
+				padding: 10px 10px;
+			}
+			
+			#confirmBtn {
+				margin-top: 30px;
+				border: none;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 17px;
+			}
+			
+			h5 {
+				margin-top: 10px;
+				margin-bottom: 10px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">修改密码</h1>
+		</header>
+
+		<div class="mui-content">
+			<h5 class="mui-plus-visible mui-content-padded" style="margin-top: 20px;">原密码：</h5>
+			<div class="mui-input-row mui-plus-visible">
+				<input id="oldPwdInput" type="password" class="mui-input-clear" placeholder="请输入原密码">
+			</div>
+
+			<h5 class="mui-plus-visible mui-content-padded" style="margin-top: 20px;">新密码：</h5>
+			<div class="mui-input-row mui-plus-visible">
+				<input id="newPwdInput" type="password" class="mui-input-clear" placeholder="请输入新密码">
+			</div>
+
+			<h5 class="mui-plus-visible mui-content-padded" style="margin-top: 0px;">确认密码：</h5>
+			<div class="mui-input-row mui-plus-visible">
+				<input id="confirmPwdInput" type="password" class="mui-input-clear" placeholder="请再次输入新密码">
+			</div>
+
+			<button id='confirmBtn' class="mui-btn mui-btn-block mui-btn-primary oabtn">确&nbsp;&nbsp;定</button>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script src="../js/util.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/view.js" ></script>
+
+		<script type="text/javascript">
+			mui.init();
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			var oldPwdInput = document.getElementById('oldPwdInput');
+			var newPwdInput = document.getElementById('newPwdInput');
+			var confirmPwdInput = document.getElementById('confirmPwdInput');
+			var confirmBtn = document.getElementById('confirmBtn');
+
+			confirmBtn.addEventListener('tap', function() {
+				if(checkValue()) {
+					requestUpdatePwd();
+				}
+
+			}, false);
+
+			function checkValue() {
+				if(oldPwdInput.value.length == 0) {
+					mui.toast('请输入原密码');
+					return false;
+				}
+
+				if(newPwdInput.value.length == 0) {
+					mui.toast('请输入新密码');
+					return false;
+				}
+
+				if(confirmPwdInput.value.length == 0) {
+					mui.toast('请再次输入新密码');
+					return false;
+				}
+
+				if(newPwdInput.value != confirmPwdInput.value) {
+					mui.toast('请确认新密码两次输入是否一致');
+					return false;
+				}
+
+				return true;
+			}
+
+			function requestUpdatePwd() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'Identity.ashx?Commond=ChangePwd&LoginName=' + window.localStorage.getItem(LoginName) + '&HisPwd=' + oldPwdInput.value + '&newPwd=' + newPwdInput.value + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseUpdatePwd(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseUpdatePwd(resp) {
+				if(resp.Result) {
+					mui.alert('密码修改成功，请牢记新密码', '提示', function() {
+						mui.plusReady(function() {
+							var self = plus.webview.currentWebview();
+							self.parent().parent().close();
+
+							window.localStorage.setItem(SavePwd, '');
+						});
+					});
+				} else {
+					mui.alert(resp.Mesg, '提示', null);
+				}
+			};
+		</script>
+	</body>
+
+</html>

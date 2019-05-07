@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+
+		<style>
+			.mui-content {
+				margin: 20px 10px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">正文</h1>
+		</header>
+
+		<div class="mui-content" id="content">
+
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js" ></script>
+		<script type="text/javascript" src="../js/util.js" ></script>
+		<script type="text/javascript" src="../js/view.js" ></script>
+		
+		<script type="text/javascript">
+			mui.init();
+
+			mui.plusReady(function() {
+				var self = plus.webview.currentWebview();
+				var content = self.content;
+
+				var div = document.getElementById('content');
+				div.innerHTML = content;
+
+			});
+		</script>
+	</body>
+
+</html>

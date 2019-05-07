@@ -1,0 +1,276 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>设置</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+		<link href="../css/mui.picker.css" rel="stylesheet" />
+		<link href="../css/mui.poppicker.css" rel="stylesheet" />
+
+		<style type="text/css">
+			.tip {
+				font-style: normal;
+				color: #666666;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<h1 id="title" class="mui-title">设置</h1>
+		</header>
+
+		<div class="mui-content">
+			<ul class="mui-card mui-table-view mui-table-view-chevron">
+				<li class="mui-table-view-cell">
+					<a id="help" href="javascript:void(0)" class="mui-navigate-right">帮助</a>
+				</li>
+				<li class="mui-table-view-cell">
+					<a id="update" href="javascript:void(0)" class="mui-navigate-right"><i id="version" class="mui-pull-right tip">V1.0</i>检查更新</a>
+				</li>
+				<li class="mui-table-view-cell">
+					<a id="updatePwd" href="javascript:void(0)" class="mui-navigate-right">修改密码</a>
+				</li>
+				<li class="mui-table-view-cell">
+					<a id="updateFont" href="javascript:void(0)" class="mui-navigate-right"><i id="fontSize" class="mui-pull-right tip">标准</i>字体设置</a>
+				</li>
+				<li class="mui-table-view-cell">
+					<a id="gohome" href="javascript:void(0)" class="mui-navigate-right"><i id="gohomeType" class="mui-pull-right tip"></i>返回主页方式</a>
+				</li>
+				<li class="mui-table-view-cell">
+					<a id="contact" href="javascript:void(0)" class="mui-navigate-right">关于我们</a>
+				</li>
+			</ul>
+
+			<ul class="mui-card mui-table-view mui-table-view-chevron" style="margin-top: 20px;">
+				<li class=" mui-table-view-cell ">
+					<a id="logout" href="javascript:void(0) " class="mui-navigate-right">注销登录</a>
+				</li>
+			</ul>
+
+		</div>
+
+		<script src="../js/mui.min.js "></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script src="../js/util.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/mui.poppicker.js"></script>
+		<script src="../js/mui.picker.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+
+		<script type="text/javascript ">
+			var help = document.getElementById('help');
+			var gohome = document.getElementById('gohome');
+			var gohomeType = document.getElementById('gohomeType');
+			var version = document.getElementById('version');
+			var update = document.getElementById('update');
+			var updatePwd = document.getElementById('updatePwd');
+			var updateFont = document.getElementById('updateFont');
+			var fontSize = document.getElementById('fontSize');
+			var logout = document.getElementById('logout');
+			var contact = document.getElementById('contact');
+
+			// 帮助
+			help.addEventListener('tap', function() {
+				mui.plusReady(function() {
+					openContent('http://117.107.162.27:80/Doc/help.pdf', '.pdf', null);
+				});
+			}, false);
+
+			// 返回主页方式
+			var homeType = window.localStorage.getItem(HOME_ACTION_TYPE);
+			if(isNullStr(homeType)) {
+				window.localStorage.setItem(HOME_ACTION_TYPE, HOME_ACTION_TAP);
+			}
+			gohomeType.innerHTML = window.localStorage.getItem(HOME_ACTION_TYPE);
+
+			var userPickerh = new mui.PopPicker();
+			userPickerh.setData([{
+				value: HOME_ACTION_TAP,
+				text: HOME_ACTION_TAP
+			}, {
+				value: HOME_ACTION_DOUBLETAP,
+				text: HOME_ACTION_DOUBLETAP
+			}, {
+				value: HOME_ACTION_LONGTAP,
+				text: HOME_ACTION_LONGTAP
+			}]);
+
+			gohome.addEventListener('tap', function(event) {
+				userPickerh.show(function(items) {
+					window.localStorage.setItem(HOME_ACTION_TYPE, items[0].text);
+					gohomeType.innerHTML = items[0].text;
+
+				});
+
+			}, false);
+
+			mui.getJSON("../manifest.json", null, function(data) {
+				// 版本号
+				version.innerHTML = 'V' + data.version.name;
+			});
+
+			// 更新
+			update.addEventListener('tap', function() {
+				requestCheckNewVersion();
+			}, false);
+
+			// 联系我们
+			contact.addEventListener('tap', function() {
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('aboutUs.html', 'aboutUs.html', subpage_style);
+					self.append(sub);
+				});
+			}, false);
+
+			// 检查更新函数
+			function requestCheckNewVersion() {
+				checkNetwork();
+
+				showProgressDialog("正在检查新版本...");
+
+				mui.ajax(FIR_CHECK_URL, {
+					dataType: 'json',
+					type: 'get',
+					timeout: TIMEOUT,
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						responseCheckNewVersion(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseCheckNewVersion(resp) {
+				try {
+					mui.getJSON("../manifest.json", null, function(data) {
+						console.log(data)
+						var localVer = data.version.code;
+						var newVer = resp.version;
+						if((newVer - 0) > (localVer - 0)) {
+							mui.confirm(resp.changelog, '检测到新版本', ['确认'], function(e) {
+								if(e.index == 0) {
+									plus.runtime.openURL(mui.os.ios ? FIR_LINK_IOS : FIR_LINK_Android);
+								}
+							})
+
+						} else {
+							mui.toast('当前已是最新版本');
+						}
+
+					});
+				} catch(e) {
+					console.log(e);
+					mui.toast('当前已是最新版本');
+				}
+			}
+
+			// 退出登录
+			logout.addEventListener('tap', function() {
+				logoutEvent();
+			}, false);
+
+			function logoutEvent() {
+				mui.confirm('您确定要注销登录吗？', '提示', ['取消', '确认'], function(e) {
+					if(e.index == 1) {
+						window.localStorage.setItem(CheckAutoLogin, false);
+
+						var wvs = plus.webview.currentWebview().parent();
+						wvs.close();
+
+						mui.toast("已退出登录");
+
+						mui.plusReady(function() {
+							plus.runtime.setBadgeNumber(0);
+						});
+					}
+				})
+			}; // end logout
+
+			// 修改密码
+			updatePwd.addEventListener('tap', function() {
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('updatePwd.html', 'updatePwd.html', subpage_style);
+					self.append(sub);
+				});
+			}, false);
+
+			var fontS = window.localStorage.getItem(FONT_SIZE);
+			for(var i = 0; i < getFontArray().length; i++) {
+				var arr = getFontArray()[i];
+
+				if(fontS == arr['value']) {
+					fontSize.innerHTML = arr['text'];
+					break;
+				}
+
+			};
+
+			// 字体设置
+			var userPickerf = new mui.PopPicker();
+			userPickerf.setData(getFontArray());
+			updateFont.addEventListener('tap', function(event) {
+				userPickerf.show(function(items) {
+					fontSize.innerHTML = items[0].text;
+
+					window.localStorage.setItem(FONT_SIZE, items[0].value);
+
+					mui.alert('重新登录后生效', '提示', function() {
+						var wvs = plus.webview.currentWebview();
+						wvs.parent().close();
+					});
+				});
+			});
+
+			function getFontArray() {
+				return [{
+					value: '-2',
+					text: '极小'
+				}, {
+					value: '-1',
+					text: '较小'
+				}, {
+					value: '0',
+					text: '标准'
+				}, {
+					value: '2',
+					text: '较大'
+				}, {
+					value: '4',
+					text: '极大'
+				}];
+			};
+
+			// 控制字体
+			(function() {
+				resizeFont('a', 15);
+				resizeFont('.tip', 15);
+			})();
+		</script>
+
+	</body>
+
+</html>

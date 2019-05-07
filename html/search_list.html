@@ -1,0 +1,302 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+		<link href="../css/mui.picker.css" rel="stylesheet" />
+		<link href="../css/mui.poppicker.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/parse.css" />
+		<link rel="stylesheet" type="text/css" href="../css/oa.css" />
+		<link rel="stylesheet" href="../css/pullrefresh.css" />
+		<style>
+			.type {
+				font-size: 16px;
+				color: #666666;
+			}
+			
+			.title {
+				font-size: 17px;
+				color: #333333;
+				margin-top: 15px;
+			}
+			
+			.date {
+				font-size: 16px;
+				color: #666666;
+				margin-top: 15px;
+			}
+		</style>
+
+		<style type="text/css">
+			.mui-content>.mui-table-view:first-child {
+				margin-top: -1px;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">搜索结果</h1>
+		</header>
+
+		<div id="pullrefresh" class="mui-content">
+			<div id="nodata" style="margin-top: 30px; display: none; text-align: center;">
+				<img src="../img/nodata.png" style="width: 150px; height: 150px;" />
+			</div>
+			<ul class="mui-table-view mui-table-view-striped mui-table-view-condensed" id="list">
+			</ul>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script src="../js/mui.pullToRefresh.js"></script>
+		<script src="../js/mui.pullToRefresh.material.js"></script>
+
+		<script type="text/javascript">
+			mui.init({
+				pullRefresh: {
+					container: '#pullrefresh',
+					down: {
+						auto: false, // 如果设置了auto，则自动下拉一次
+						style: 'circle',
+						callback: pulldownRefresh
+					},
+					up: {
+						contentrefresh: '正在加载...',
+						callback: pullupRefresh
+					}
+				}
+			});
+
+			// 加载更多，查询下一页
+			function pullupRefresh() {
+				currentPage++;
+
+				requestSearch();
+			}
+
+			// 下拉刷新，清空所有，刷新第一页
+			function pulldownRefresh() {
+				var list = document.getElementById("list");
+				// 首先清空下面的所有结点
+				while(list.hasChildNodes()) {
+					list.removeChild(list.firstChild);
+				}
+
+				currentPage = 1;
+
+				requestSearch();
+			}
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			var FuncModule = '';
+			var TypeId = '';
+			var Title = '';
+			var SearchStartDate = '';
+			var SearchEndDate = '';
+
+			window.onload = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					FuncModule = self.FuncModule;
+					TypeId = self.TypeId;
+					Title = self.Title;
+					SearchStartDate = self.SearchStartDate;
+					SearchEndDate = self.SearchEndDate;
+
+					requestSearch();
+				});
+			};
+
+			var currentPage = 1; // 当前页码
+			var totalPages = 1; // 总页数
+
+			function requestSearch() {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				// searchInfo可以通用
+				var searchInfo = {
+					FuncModule: FuncModule,
+					TypeId: TypeId,
+					TypeName: "",
+					ReceiveTime: "",
+					State: "",
+					NodeName: "",
+					Drafter: "",
+					DraftTime: "",
+					Title: Title,
+					BusId: "",
+					RecordId: "",
+					SearchStartDate: SearchStartDate,
+					SearchEndDate: SearchEndDate
+				};
+
+				var pageInfo = {
+					CurrentPage: currentPage,
+					PageSize: PAGE_SIZE
+				};
+
+				var url = getHost() + "MultipleSearchManager.ashx?Commond=QueryMultipleSearchResult&pageInfo=" + JSON.stringify(pageInfo) + "&searchInfo=" + JSON.stringify(searchInfo) + "&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseSearch(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseSearch(resp) {
+				if(currentPage == 1 && resp.ListRecord.length == 0) {
+					document.getElementById('nodata').style.display = 'block';
+					document.getElementById('list').style.display = 'none';
+					return;
+				}
+
+				document.getElementById('nodata').style.display = 'none';
+				document.getElementById('list').style.display = 'block';
+
+				totalPages = Math.ceil(resp.PageInfo.TotalRecordSize / PAGE_SIZE);
+
+				var list = document.getElementById("list");
+
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+				var li;
+				for(var i = 0; i < resp.ListRecord.length; i++) {
+					var record = resp.ListRecord[i];
+					li = document.createElement('li');
+					li.className = 'mui-table-view-cell';
+					li.id = record.BusId + '#' + record.RecordId + "#" + record.FuncModule + '#' + record.State;
+					li.innerHTML = '<div class="mui-table mui-navigate-right "><div class="mui-table-cell mui-col-xs-11"><span class="type" style="color:' + getStateColor(record.State - 0) + ';">[' + getState(record.FuncModule - 0, record.State - 0) + ']&nbsp;</span><span class="type"> ' + record.FuncModuleName + '&nbsp;-&nbsp;' + record.TypeName + '</span><p class="title">' + record.Title + '</p><p class="date"><span>' + record.Drafter + '&nbsp;&nbsp;' + record.DraftTime + '</span></p></div></div>';
+					fragment.appendChild(li);
+				}
+				list.appendChild(fragment);
+
+				resizeCurrentFont();
+				
+				mui('#pullrefresh').pullRefresh().endPullup((currentPage >= totalPages)); //参数为true代表没有更多数据了。
+				mui('#pullrefresh').pullRefresh().endPulldown();
+			}
+
+			// 格式化状态
+			function getState(FuncModule, State) {
+				var str = '';
+				if(FuncModule == 1 || FuncModule == 2 || FuncModule == 3) {
+					str = (State == 0 ? '待办' : '已办');
+				} else {
+					str = (State == 0 ? '待阅' : '已阅');
+				}
+				return str;
+			};
+			
+			function getStateColor(State) {
+				if (State == 0) {// 待办
+					return "#FF6666"; // 红
+				}
+				
+				return "#666666"; // 绿
+			};
+
+			mui('#list').on('tap', 'li', function(e) {
+				var param = this.getAttribute("id").split('#');
+				var InstanceId = param[0];
+				var RecordId = param[1];
+				var FuncModule = param[2];
+				var State = param[3];
+
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var extra = {};
+					var id = '';
+					// 1:工作流事物;2:公文;3:便函4:传阅5:知会6:信息中心7:通知管理8:通知公告 [信息中心+通知管理]）
+					if(FuncModule == 1 || FuncModule == 2 || FuncModule == 3) {
+						id = 'flowManager_detail_ex.html';
+						extra = {
+							InstanceId: InstanceId,
+							RecordId: RecordId,
+							flowAttr: FuncModule,
+							browModel: State
+						}
+
+					} else if(FuncModule == 4) {
+						id = 'passReadRecord_detail.html';
+						extra = {
+							InstanceId: InstanceId,
+							RecordId: RecordId
+						}
+
+					} else if(FuncModule == 5) {
+						id = 'flowNotify_detail.html';
+						extra = {
+							InstanceId: InstanceId,
+							RecordId: RecordId
+						}
+
+					} else if(FuncModule == 6) {
+						id = 'noticeInfo_detail.html';
+						extra = {
+							infoId: InstanceId
+						}
+
+					} else if(FuncModule == 7) {
+						id = 'noticeManager_detail.html';
+						extra = {
+							noticeId: InstanceId
+						}
+					}
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create(id, Math.random() + '', subpage_style, extra);
+					self.parent().append(sub);
+				});
+
+			});
+		</script>
+
+		<script>
+			function resizeCurrentFont() {
+				resizeFont('.type', 16);
+				resizeFont('.title', 17);
+				resizeFont('.date', 16);
+			}
+		</script>
+
+	</body>
+
+</html>

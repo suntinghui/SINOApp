@@ -1,0 +1,565 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/mui.picker.css" />
+		<link rel="stylesheet" type="text/css" href="../css/mui.poppicker.css" />
+		<link rel="stylesheet" href="../css/mui.dtpicker.css" />
+		<link rel="stylesheet" href="../css/parse.css" />
+		<link rel="stylesheet" href="../css/oa.css" />
+
+		<style>
+			.title {
+				font-size: 17px;
+				color: #333333;
+				margin: 20px auto 10px 20px;
+			}
+			
+			.content-title {
+				font-size: 16px;
+				color: #333333;
+				margin-top: 10px;
+			}
+			
+			.content-img {
+				width: 50px;
+				height: 50px;
+			}
+			
+			.item-div {
+				margin: 10px 20px 10px 10px;
+				display: -webkit-box;
+				-webkit-box-pack: center;
+				-webkit-box-align: center;
+			}
+			
+			.item-name {
+				width: 30%;
+				color: #666666;
+				font-size: 16px;
+				text-align: right;
+			}
+			
+			.item-value {
+				margin-left: 10px;
+				width: 70%;
+				color: #333333;
+				font-size: 16px;
+			}
+			
+			.orbitName {
+				width: 30%;
+				font-size: 16px;
+				float: left;
+				text-align: right;
+				margin: 6px 0px 6px 15px;
+				color: #666666;
+			}
+			
+			.orbitContent {
+				float: right;
+				width: 60%;
+				color: #333333;
+				font-size: 16px;
+				margin: 6px auto;
+			}
+			
+			.home {
+				height: 25px;
+				position: absolute;
+				right: 10px;
+				top: 8px;
+			}
+			
+			.search {
+				height: 25px;
+				position: absolute;
+				right: 50px;
+				top: 8px;
+			}
+			
+			#sign {
+				background: -webkit-linear-gradient(top, #990033AA, #990033, #990033AA);
+				border: none;
+			}
+		</style>
+	</head>
+
+	<body style="background: #efeff4;">
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">详情信息</h1>
+			<button id="sign" class="mui-btn mui-btn-danger mui-pull-right" style="display: none;">签核</button>
+		</header>
+
+		<div class="mui-content">
+			<div id="slider" class="mui-slider mui-fullscreen">
+				<div id="sliderSegmentedControl" class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+					<a class="mui-control-item mui-active" href="#item1">
+						文件信息
+					</a>
+					<a class="mui-control-item" href="#item2">
+						表单信息
+					</a>
+					<a class="mui-control-item" href="#item3">
+						办理轨迹
+					</a>
+				</div>
+
+				<div id="sliderProgressBar" class="mui-slider-progress-bar mui-col-xs-4"></div>
+
+				<div class="mui-slider-group">
+					<!--文件信息-->
+					<div id="item1" class="mui-slider-item mui-control-content mui-active" style="border: none;">
+						<div class="mui-scroll-wrapper scroll-content">
+
+							<!--class 原有mui-scroll，但是在android手机上会闪动-->
+							<div class="left-content" id="detailInfo">
+							</div>
+						</div>
+					</div>
+
+					<!--表单信息-->
+					<div id="item2" class="mui-slider-item mui-control-content" style="border: none;">
+						<div class="mui-scroll-wrapper scroll-content">
+							<div class="mui-scroll right-content" id="formInfo">
+							</div>
+						</div>
+					</div>
+
+					<!--办理轨迹-->
+					<div id="item3" class="mui-slider-item mui-control-content" style="border: none;">
+						<div class="mui-scroll-wrapper scroll-content">
+							<div class="mui-scroll right-content" id="meetingInfo">
+								<div id="nodata3" style="margin-top: 30px; display: none; text-align: center;">
+									<img src="../img/nodata.png" style="width: 150px; height: 150px;" />
+								</div>
+								<ul class="mui-table-view" id="orbitList">
+								</ul>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script src="../js/parse.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/view.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/mui.picker.js"></script>
+		<script src="../js/mui.picker.min.js" type="text/javascript" charset="utf-8"></script>
+
+		<script>
+			mui.init();
+
+			mui('.mui-scroll-wrapper').scroll();
+			mui('.scroll-content').scroll({
+				indicators: true //是否显示滚动条
+			});
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			var InstanceId = '';
+			var RecordId = '';
+			var browModel = '1'; // 浏览模式（1：浏览模式，0：编辑模式）
+			var flowAttr = '1'; // 流程属性：1-通用工作流；2-公文；3-便函
+			var currentOpinion = "" // 用户输入的意见，需要带入下一页
+
+			var signAction = false; // 如果点击的是右上角的sign，则为true，进入输入意见界面，如果是点击的表单中的提交下一步，则为false。
+
+			window.onload = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					InstanceId = self.InstanceId;
+					RecordId = self.RecordId;
+					browModel = self.browModel;
+					flowAttr = self.flowAttr;
+
+					document.getElementById('sign').style.display = (browModel == '0' ? 'block' : 'none');
+
+					requestDetail();
+					requestFormHTML();
+					requestGetListFlowRecord();
+				});
+			};
+
+			// 获取详情
+			function requestDetail() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetInstance&instanceId=' + InstanceId + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseDetail(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseDetail(resp) {
+				// 首先清空下面的所有结点
+				while(detailInfo.hasChildNodes()) {
+					detailInfo.removeChild(detailInfo.firstChild);
+				}
+
+				if(resp == null) {
+					mui.back();
+					return;
+				}
+
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+				fragment.appendChild(createInfoItem("标题", resp.FlowTitle));
+				fragment.appendChild(createInfoItem("类型名称", exReturnSpace(resp.FlowTypeName)));
+				fragment.appendChild(createInfoItem("起草人", exReturnSpace(resp.DrafterName)));
+				fragment.appendChild(createInfoItem("创建时间", exReturnSpace(resp.CreateDate)));
+
+				detailInfo.appendChild(fragment);
+
+				requestDocData();
+			}
+			
+
+			// 查询正文数据
+			function requestDocData() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetDocData&instanceId=' + InstanceId;
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseDocData(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseDocData(resp) {
+				if(!isNullStr(resp)) {
+					detailInfo.appendChild(createDownloadItem('正文', '点击查看正文', resp.DownLoadUrl, getDocumentType(resp.ContentType), resp.HtmlContent, resp.Size));
+				} else {
+					detailInfo.appendChild(createInfoItem('正文', '无'));
+				}
+
+				requestAtt();
+			}
+
+			// 查询附件
+			function requestAtt() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'ATTManager.ashx?Commond=GetAttList&busId=' + InstanceId;
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseAtt(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseAtt(data) {
+				if(!isNullStr(data)) {
+					var fragment = document.createDocumentFragment();
+
+					for(var i = 0; i < data.length; i++) {
+						fragment.appendChild(createDownloadItem('附件' + (i + 1), data[i].AttName, data[i].DownLoadUrl, data[i].AttSuffix, data[i].HtmlContent, data[i].AttSize));
+					}
+
+					detailInfo.appendChild(fragment);
+
+				} else {
+					detailInfo.appendChild(createInfoItem('附件', '无'));
+				}
+
+				resizeCurrentFont();
+			};
+
+			// 获取表单信息
+			function requestFormHTML() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetFormObj&instanceId=' + InstanceId + '&recordId=' + RecordId + '&browModel=' + browModel + '&flowAttr=' + flowAttr + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseFormHTML(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			} // end requestFormHTML
+
+			function responseFormHTML(resp) {
+				var parentdiv = document.getElementById('formInfo');
+				var fragment = parseForm(resp, flowAttr, '1');
+				parentdiv.appendChild(fragment);
+			} // end responseFormHTML
+
+			// 查询办理轨迹信息
+			function requestGetListFlowRecord() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetListFlowRecord&instanceId=' + InstanceId + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseGetListFlowRecord(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseGetListFlowRecord(resp) {
+				if(resp.length == 0) {
+					document.getElementById('nodata3').style.display = 'block';
+					document.getElementById('orbitList').style.display = 'none';
+					return;
+				}
+
+				document.getElementById('nodata3').style.display = 'none';
+				document.getElementById('orbitList').style.display = 'block';
+
+				var list = document.getElementById("orbitList");
+				// 首先清空下面的所有结点
+				while(list.hasChildNodes()) {
+					list.removeChild(list.firstChild);
+				}
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+				var li;
+				for(var i = 0; i < resp.length; i++) {
+					var record = resp[i];
+					li = document.createElement('li');
+					li.className = 'mui-table-view-cell';
+					li.id = i + "";
+
+					li.innerHTML += '<div class="orbitName">工作结点：</div><div class="orbitContent">' + record.FEG_30_COL_110 + '</div>';
+					li.innerHTML += '<div class="orbitName">实办人员：</div><div class="orbitContent">' + record.HanderName + '</div>';
+					li.innerHTML += '<div class="orbitName">创建时间：</div><div class="orbitContent">' + record.FEG_30_COL_9994 + '</div>';
+					li.innerHTML += '<div class="orbitName">办理结果：</div><div class="orbitContent">' + getResultState(record.FEG_30_COL_190) + '</div>';
+					fragment.appendChild(li);
+				}
+				list.appendChild(fragment);
+
+				resizeCurrentFont();
+			}
+
+			function getResultState(state) {
+				if(state == '00') {
+					return '未办完';
+				} else if(state == '01') {
+					return '未办完';
+				} else if(state == '02') {
+					return '已办完';
+				} else if(state == '03') {
+					return '已办完';
+				} else if(state == '04') {
+					return '已办完';
+				}
+
+				return '未知状态';
+
+			}
+
+			document.getElementById('sign').addEventListener('tap', function() {
+				// parse.js
+				signAction = true;
+
+				confirmNext();
+			}, false);
+
+			/**
+			 *  签核按纽事件 
+			 *	在parse.js中使用，在该处定义是为了方便传值
+				进入签核界面 
+			 */
+			function gotoSignView() {
+				if(signAction == false) {
+					// signAction为false，表示为提交按纽事件
+					requestFlowNext();
+					return;
+				}
+
+				var subpage_style = {
+					top: '0px',
+					bottom: '0px'
+				};
+
+				var extra = {
+					recordId: RecordId,
+					flowAttr: flowAttr,
+					currentOpinion:currentOpinion
+				};
+
+				var self = plus.webview.currentWebview();
+				var sub = plus.webview.create('sign.html', 'sign.html', subpage_style, extra);
+				self.parent().append(sub);
+			}
+
+			function requestFlowNext() {
+				showProgressDialog("正在加载...");
+
+				// flowScene 流转场景（必填）：1-流转预判，2-主控流转操作
+				var url = getHost() + 'WorkFlow.ashx?Commond=FlowNext&recordId=' + RecordId + '&optionContent=&flowAttr=' + flowAttr + '&flowScene=1&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseFlowNext(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			/*
+			 * 流程向下一环节流转，预判流转和主控流转通用接口：当符合直接流转情况时调用此接口直接流转成功，
+			 * 如果返回false则跳转到主控流转页面，选择下级工作节点+主办人|参与人（会签人）后调用此接口流转。
+			 */
+			function responseFlowNext(resp) {
+				if(resp.Result) {
+					done();
+				} else {
+					goon();
+				}
+			};
+
+			// 直接流转成功 
+			function done() {
+				mui.alert('操作成功', '提示', function() {
+
+					closeToList();
+				});
+			}
+
+			// 主控流转
+			function goon() {
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var extra = {
+						recordId: RecordId,
+						flowAttr: flowAttr,
+						optionContent: ''
+					}
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('sign_next.html', 'sign_next.html', subpage_style, extra);
+					self.parent().append(sub);
+				});
+			}
+		</script>
+
+		<script>
+			function resizeCurrentFont() {
+				resizeFont('.title', 17);
+				resizeFont('.content-title', 16);
+				resizeFont('.item-name', 16);
+				resizeFont('.item-value', 16);
+				resizeFont('.orbitName', 16);
+				resizeFont('.orbitContent', 16);
+			}
+		</script>
+
+	</body>
+
+</html>

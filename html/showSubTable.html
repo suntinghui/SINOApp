@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/table.css" />
+
+	</head>
+
+	<body>
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 class="mui-title">从表数据</h1>
+		</header>
+
+		<div class="mui-content">
+
+			<div id="title" style="text-align: center; font-size: 15px; color: #666666; margin: 10px auto;">从表</div>
+
+			<table width="97%" class="table" id="table" style="margin-bottom: 20px;"></table>
+
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js" ></script>
+		<script type="text/javascript" src="../js/util.js" ></script>
+		<script type="text/javascript" src="../js/view.js" ></script>
+		
+		<script type="text/javascript">
+			mui.init();
+
+			window.onload = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					var data = JSON.parse(self.data);
+
+					document.getElementById('title').innerHTML = data.CaptionName;
+
+					parseView(data);
+				});
+			};
+
+			function parseView(data) {
+				var table = document.getElementById('table');
+				// 首先清空下面的所有结点
+				while(table.hasChildNodes()) {
+					table.removeChild(table.firstChild);
+				}
+
+				// 添加表头
+				var tr = document.createElement('tr');
+				var trstr = '';
+				for(var i = 0; i < data.Columns.length; i++) {
+					var thstr = '<th>' + data.Columns[i].CaptionName + '</th>';
+					trstr += thstr;
+				}
+				tr.innerHTML = trstr;
+				table.appendChild(tr);
+
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+				for(var i = 0; i < data.DataSource.length; i++) {
+					var trcontent = document.createElement('tr');
+					var trcontentStr = '';
+					for(var j = 0; j < data.Columns.length; j++) {
+						var ColumnName = data.Columns[j].ColumnName;
+						trcontentStr += '<td>' + eval("data.DataSource[i]." + ColumnName) + '</td>';
+					}
+					trcontent.innerHTML = trcontentStr;
+					fragment.appendChild(trcontent);
+				}
+				table.appendChild(fragment);
+			}
+		</script>
+	</body>
+
+</html>

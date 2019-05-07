@@ -1,0 +1,271 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>搜索</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../css/mui.picker.css" rel="stylesheet" />
+		<link href="../css/mui.poppicker.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+
+		<style type="text/css">
+			.mui-content {
+				padding: 10px 10px;
+			}
+			
+			#searchBtn {
+				margin-top: 30px;
+				border: none;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 17px;
+			}
+			
+			h5 {
+				margin-top: 10px;
+				margin-bottom: 10px;
+			}
+			
+			.select {
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 16px;
+				text-align: left;
+				padding-left: 15px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<h1 id="title" class="mui-title">搜索</h1>
+			<a id="reset" class="mui-btn mui-btn-link mui-pull-right">重置</a>
+		</header>
+
+		<div class="mui-content">
+			<div style="margin: 10px 0 10px 10px;">
+				<span style="font-size: 14px; color: #888888;">标题: (</span><span style="font-size: 14px; color: red;">必填项</span><span style="font-size: 14px; color: #888888;">)</span>
+			</div>
+
+			<div class="mui-input-row mui-plus-visible">
+				<input id="titleInput" type="text" class="mui-input-clear" placeholder="请输入标题关键字">
+			</div>
+
+			<h5 class="mui-plus-visible mui-content-padded" style="margin-top: 0px;">功能类型：</h5>
+			<button id='funcModuleSel' class="mui-btn mui-btn-block select" type='button'>请选择功能类型</button>
+
+			<div id="typeIdDiv">
+				<h5 class="mui-plus-visible mui-content-padded" style="margin-top: 15px;">文件功能：</h5>
+				<button id='typeIdSel' class="mui-btn mui-btn-block select" type='button'>请选择文件功能</button>
+			</div>
+
+			<h5 class="mui-plus-visible mui-content-padded" style="margin-top: 15px;">开始时间：</h5>
+			<input id="startDateInput" type="date" class="mui-input-clear" value="">
+
+			<h5 class="mui-plus-visible mui-content-padded" style="margin-top: 0px;">结束时间：</h5>
+			<input id="endDateInput" type="date" class="mui-input-clear" value="">
+
+			<div style="text-align: center;">
+				<button id="date1" type="button" class="mui-btn">近一月</button>
+				<button id="date2" type="button" class="mui-btn">近三月</button>
+				<button id="date3" type="button" class="mui-btn">近半年</button>
+				<button id="date4" type="button" class="mui-btn">近一年</button>
+			</div>
+
+			<button id='searchBtn' class="mui-btn mui-btn-block mui-btn-primary oabtn">搜&nbsp;&nbsp;索</button>
+
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/mui.poppicker.js"></script>
+		<script src="../js/mui.picker.js"></script>
+		<script src="../js/util.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/view.js" ></script>
+
+		<script type="text/javascript">
+			mui.init();
+
+			var titleInput = document.getElementById('titleInput');
+			var funcModuleSel = document.getElementById('funcModuleSel');
+			var typeIdSel = document.getElementById('typeIdSel');
+			var startDateInput = document.getElementById('startDateInput');
+			var endDateInput = document.getElementById('endDateInput');
+
+			// 默认为全部
+			var FuncModule = 0; // 功能模块
+			var TypeId = ''; // 类型id
+
+			document.getElementById('typeIdDiv').style.display = 'none';
+
+			startDateInput.value = getCurrentMonthFirst().format('yyyy-MM-dd');
+			endDateInput.value = getyyyyMMdd(new Date());
+
+			document.getElementById('date1').addEventListener('tap', function() {
+				startDateInput.value = addDate(new Date(), 'M', -1).format('yyyy-MM-dd');
+			}, false);
+
+			document.getElementById('date2').addEventListener('tap', function() {
+				startDateInput.value = addDate(new Date(), 'M', -3).format('yyyy-MM-dd');
+			}, false);
+
+			document.getElementById('date3').addEventListener('tap', function() {
+				startDateInput.value = addDate(new Date(), 'M', -6).format('yyyy-MM-dd');
+			}, false);
+
+			document.getElementById('date4').addEventListener('tap', function() {
+				startDateInput.value = addDate(new Date(), 'M', -12).format('yyyy-MM-dd');
+			}, false);
+
+			document.getElementById('searchBtn').addEventListener('tap', function() {
+				if(checkValue()) {
+					gotoList();
+				}
+			}, false);
+			
+			document.getElementById('reset').addEventListener('tap', function(){
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.reload();
+				});
+			}, false);
+
+			// 功能类型是定死的。
+			var userPicker1 = new mui.PopPicker();
+			userPicker1.setData([{
+				value: '0',
+				text: '全部'
+			}, {
+				value: '2',
+				text: '公文'
+			}, {
+				value: '3',
+				text: '便函'
+			}, {
+				value: '1',
+				text: '事务'
+			}, {
+				value: '4',
+				text: '传阅文件'
+			}, {
+				value: '5',
+				text: '知会文件'
+			}, {
+				value: '8',
+				text: '通知公告'
+			}]);
+			
+			userPicker1.pickers[0].setSelectedIndex(4, 2000);
+			//userPicker1.pickers[0].setSelectedValue('3', 2000);
+			
+			var funcModuleSel = document.getElementById('funcModuleSel');
+			funcModuleSel.addEventListener('tap', function(event) {
+				userPicker1.show(function(items) {
+					console.log(items);
+					
+					funcModuleSel.innerHTML = items[0].text;
+
+					FuncModule = (items[0].value - 0);
+
+					refreshTypeId();
+				});
+			}, false);
+
+			// 文件功能即事务类型
+			// 如果是公文、便签、工作流就需要调用起草那获取事物类型的接口flowClassId参数传空，如果是其他功能模块文件功能禁止选择。
+			function refreshTypeId() {
+				if(FuncModule == 0 || FuncModule > 3) {
+					document.getElementById('typeIdDiv').style.display = 'none';
+					return;
+				}
+
+				document.getElementById('typeIdDiv').style.display = 'block';
+			};
+
+			// 请求更新文件功能
+			typeIdSel.addEventListener('tap', function(event) {
+				requestTypeId();
+			}, false);
+
+			// 请求文件功能, 即事物分类
+			function requestTypeId() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + "WorkFlow.ashx?Commond=GetFlowType&specialTypeFlag=" + FuncModule + "&flowClassId=" + "&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseTypeId(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			};
+
+			function responseTypeId(data) {
+				var str = JSON.stringify(data).replace(/FlowTypeName/g, "text").replace(/FLowTypeId/g, "value");
+				var userPicker2 = new mui.PopPicker();
+				userPicker2.setData(JSON.parse(str));
+				userPicker2.show(function(items) {
+					typeIdSel.innerHTML = items[0].text;
+
+					TypeId = (items[0].value - 0);
+				});
+
+			}
+
+			function checkValue() {
+				if(titleInput.value.length < 2) {
+					mui.toast('标题最少输入两个字');
+					return false;
+				}
+
+				return true;
+			}
+
+			function gotoList() {
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var param = {
+						FuncModule: FuncModule,
+						TypeId: TypeId,
+						Title: titleInput.value,
+						SearchStartDate: startDateInput.value,
+						SearchEndDate: endDateInput.value
+					};
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('search_list.html', 'search_list.html', subpage_style, param);
+					self.append(sub);
+				});
+			}
+		</script>
+		
+		<script>
+			(function resizeCurrentFont() {
+				resizeFont('.select', 15);
+				resizeFont('input', 15);
+				resizeFont('button', 14);
+			})();
+		</script>
+	</body>
+
+</html>

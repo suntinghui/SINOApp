@@ -1,0 +1,301 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>通知详情</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/parse.css" />
+		<link rel="stylesheet" href="../css/oa.css" />
+
+		<style>
+			.title {
+				font-size: 17px;
+				color: #333333;
+				margin: 20px auto 10px 20px;
+			}
+			
+			.content-title {
+				font-size: 16px;
+				color: #333333;
+				margin-top: 10px;
+			}
+			
+			.content-img {
+				width: 50px;
+				height: 50px;
+			}
+			
+			.file-div {
+				display: -webkit-box;
+				-webkit-box-pack: center;
+				-webkit-box-align: center;
+			}
+			
+			.file-name {
+				width: 20%;
+				color: #666666;
+				font-size: 16px;
+			}
+			
+			.item-div {
+				margin: 20px 20px 15px 10px;
+				display: -webkit-box;
+				-webkit-box-pack: center;
+				-webkit-box-align: center;
+			}
+			
+			.item-name {
+				width: 30%;
+				color: #666666;
+				font-size: 16px;
+				text-align: right;
+			}
+			
+			.item-value {
+				margin-left: 10px;
+				width: 70%;
+				color: #333333;
+				font-size: 16px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">通知详情</h1>
+		</header>
+
+		<div class="mui-content">
+			<div id="slider" class="mui-slider mui-fullscreen">
+				<div id="sliderSegmentedControl" class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+					<a class="mui-control-item mui-active" href="#item1">
+						正文
+					</a>
+					<a class="mui-control-item" href="#item2">
+						详情
+					</a>
+				</div>
+
+				<div id="sliderProgressBar" class="mui-slider-progress-bar mui-col-xs-6"></div>
+
+				<div class="mui-slider-group">
+
+					<!--会议内容-->
+					<div id="item1" class="mui-slider-item mui-control-content mui-active" style="border: none;">
+						<div class="mui-scroll-wrapper scroll-content">
+
+							<div class="mui-scroll left-content" id="meetingContent">
+								<p class="mui-ellipsis title">点击标题查看正文:</p>
+
+								<ul class="mui-table-view" id="contentUL">
+								</ul>
+
+								<p class="mui-ellipsis title" id="attTitle">附件:</p>
+
+								<ul class="mui-table-view" id="attUL">
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<!--参会信息-->
+					<div id="item2" class="mui-slider-item mui-control-content" style="border: none;">
+						<div class="mui-scroll-wrapper scroll-content">
+							<div class="mui-scroll right-content" id="meetingInfo">
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+
+		<script>
+			mui.init();
+
+			mui('.mui-scroll-wrapper').scroll();
+			mui('.scroll-content').scroll({
+				indicators: true //是否显示滚动条
+			});
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			window.onload = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					var noticeId = self.noticeId;
+
+					requestDetail(noticeId);
+				})
+
+			};
+
+			function requestDetail(noticeId) {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + "NoticeManager.ashx?Commond=GetNoticeInfo&tokenKey=" + window.localStorage.getItem(TokenKey) + "&noticeId=" + noticeId + '&includeDoc=false';
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						console.log("详情：" + JSON.stringify(data));
+						responseDetail(data);
+
+						mui.plusReady(function() {
+							hideProgressDialog();
+
+							mui.currentWebview.show();
+						});
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast(getHttpErrorDesp(type));
+
+						hideProgressDialog();
+					}
+				});
+			};
+
+			function responseDetail(resp) {
+				refreshContent(resp);
+				refreshInfo(resp);
+				requestAttList(resp.NoticeId);
+			};
+
+			function refreshContent(resp) {
+				var contentUL = document.getElementById("contentUL");
+				// 首先清空下面的所有结点
+				while(contentUL.hasChildNodes()) {
+					contentUL.removeChild(contentUL.firstChild);
+				}
+
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+				var li = document.createElement('li');
+				li.className = "mui-table-view-cell";
+				li.id = "contentItem";
+				li.innerHTML = '<div class="file-div"><div class="file-name"><img src="' + getDocumentTypeImage(resp.ContentType) + '"></div><div class="item-value" style="margin-left: 15px; color:#6699FF">' + resp.NoticeTitle + '</br><p style="margin-top: 5px; color: #666666;">' + getFileSizeStr(resp.Size) + '</p></div></div>';
+				fragment.appendChild(li);
+				contentUL.appendChild(fragment);
+
+				document.getElementById('contentItem').addEventListener('tap', function(event) {
+					openContent(resp.DownLoadUrl, getDocumentType(resp.ContentType), resp.HtmlContent);
+				}, false);
+			}
+
+			function refreshInfo(resp) {
+				var meetingInfo = document.getElementById("meetingInfo");
+				// 首先清空下面的所有结点
+				while(meetingInfo.hasChildNodes()) {
+					meetingInfo.removeChild(meetingInfo.firstChild);
+				}
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+				fragment.appendChild(createInfoItem("通知标题", resp.NoticeTitle));
+				fragment.appendChild(createInfoItem("发布日期", exReturnSpace(resp.PublishDate)));
+				fragment.appendChild(createInfoItem("发布单位", exReturnSpace(resp.PublishUnit)));
+				fragment.appendChild(createInfoItem("发布人", exReturnSpace(resp.Publisher)));
+
+				meetingInfo.appendChild(fragment);
+
+				resizeCurrentFont();
+			}
+
+			// 查询附件信息
+			function requestAttList(busId) {
+				var url = getHost() + "ATTManager.ashx?Commond=GetAttList&busId=" + busId;
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						console.log("附件：" + JSON.stringify(data));
+
+						hideProgressDialog();
+
+						responseAttList(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+
+			}
+
+			function responseAttList(data) {
+				if(data.length == 0) {
+					// document.getElementById('attTitle').style.visibility = 'hidden';
+					// document.getElementById("attUL").style.visibility = 'hidden';
+
+					var li = document.createElement('li');
+					li.className = "mui-table-view-cell";
+					li.innerHTML = '<div class="item-value" style="margin-left: 15px;">没有附件内容</div>';
+					document.getElementById("attUL").appendChild(li);
+
+				} else {
+					document.getElementById('attTitle').style.visibility = 'visible';
+
+					var attUL = document.getElementById("attUL");
+					// 首先清空下面的所有结点
+					while(attUL.hasChildNodes()) {
+						attUL.removeChild(attUL.firstChild);
+					}
+
+					// 开始添加新的节点
+					var fragment = document.createDocumentFragment();
+					for(var i = 0; i < data.length; i++) {
+						var li = document.createElement('li');
+						li.className = "mui-table-view-cell";
+						li.id = i;
+
+						li.name = data[i].DownLoadUrl;
+						li.innerHTML = '<div class="file-div"><div class="file-name"><img src="' + getDocumentTypeImage(formatToType(data[i].AttSuffix)) + '"></div><div class="item-value" style="margin-left: 15px;color:#6699FF">' + data[i].AttName + '</br><p style="margin-top: 5px; color: #666666;">' + getFileSizeStr(data[i].AttSize) + '</p></div></div>';
+						li.addEventListener('tap', function(event) {
+							openContent(data[this.id].DownLoadUrl, data[this.id].AttSuffix, data[this.id].HtmlContent);
+						}, false);
+
+						fragment.appendChild(li);
+					}
+
+					attUL.appendChild(fragment);
+				}
+
+				resizeCurrentFont();
+			}
+		</script>
+
+		<script>
+			function resizeCurrentFont() {
+				resizeFont('.title', 17);
+				resizeFont('.content-title', 16);
+				resizeFont('.item-name', 16);
+				resizeFont('.item-value', 16);
+				resizeFont('.file-name', 16);
+			}
+		</script>
+	</body>
+
+</html>

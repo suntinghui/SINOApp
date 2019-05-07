@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../css/mui.picker.css" rel="stylesheet" />
+		<link href="../css/mui.poppicker.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+
+		<style>
+			.mui-bar .mui-pull-left .mui-icon {
+				padding-right: 5px;
+				font-size: 28px;
+			}
+			
+			.mui-bar .mui-btn {
+				font-weight: normal;
+				font-size: 17px;
+			}
+			
+			.mui-bar .mui-btn-link {
+				top: 1px;
+			}
+			
+			.mui-content {
+				padding: 5%;
+			}
+			
+			.tip {
+				color: red;
+				margin-top: 20px;
+				line-height: inherit;
+			}
+			
+			#ip {
+				font-size: 16px;
+			}
+			
+			#showOrg {
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 16px;
+				text-align: left;
+				padding-left: 15px;
+			}
+			
+			#setBtn {
+				margin-top: 30px;
+				border: none;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 17px;
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 class="mui-title">设置机构</h1>
+		</header>
+
+		<div class="mui-content">
+
+			<h5 class="tip">以下信息请在管理人员的指引下修改，设置错误会造成无法登录系统，请慎重修改!</h5>
+
+			<h5 class="mui-content-padded" style="margin-top: 20px;">组织机构</h5>
+			<button id='showOrg' class="mui-btn mui-btn-block" type='button'>请选择组织机构</button>
+
+			<h5 class="mui-content-padded" style="margin-top: 20px;">服务器地址</h5>
+
+			<div class="mui-input-row" style="margin-top: 10px;">
+				<input id="ip" type="url" class="mui-input-clear" placeholder="自动填充，慎重修改">
+			</div>
+
+			<button id='setBtn' class="mui-btn mui-btn-block mui-btn-primary oabtn">设&nbsp;&nbsp;置</button>
+
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script src="../js/view.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/mui.picker.js"></script>
+		<script src="../js/mui.picker.min.js" type="text/javascript" charset="utf-8"></script>
+
+		<script type="text/javascript">
+			mui.init();
+
+			var ip = document.getElementById('ip');
+
+			var orgId = '';
+
+			var userPicker = new mui.PopPicker();
+
+			var showOrg = document.getElementById('showOrg');
+			showOrg.addEventListener('tap', function(event) {
+				if(orgId.length == 0) {
+					requestServiceList();
+				} else {
+					showPicker();
+				}
+			}, false);
+
+			function requestServiceList() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'Identity.ashx?Commond=GetServiceUrlList';
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseServiceList(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseServiceList(data) {
+				var str = JSON.stringify(data).replace(/OrgName/g, "text").replace(/MobileOfficeUrl/g, "value");
+				userPicker.setData(JSON.parse(str));
+
+				showPicker();
+			}
+
+			function showPicker() {
+				userPicker.show(function(items) {
+					showOrg.innerHTML = items[0].text;
+					orgId = items[0].value;
+					ip.value = orgId;
+				});
+			};
+
+			document.getElementById('setBtn').addEventListener('tap', function() {
+				window.localStorage.setItem(SET_HOST, ip.value);
+
+				mui.toast('地址设置成功！')
+			}, false);
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,429 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+		<link rel="stylesheet" type="text/css" href="../css/parse.css" />
+
+		<style type="text/css">
+			.mui-content {
+				height: 100%;
+			}
+			
+			.ulstyle {
+				margin-top: 15px;
+			}
+			
+			.imgdivstyle {
+				text-align: center;
+			}
+			
+			.imgstyle {
+				height: 70px;
+			}
+			
+			.valuestyle {
+				margin-top: 10px;
+				margin-bottom: 10px;
+			}
+			
+			#okBtn {
+				border: none;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 17px;
+				width: 90%;
+			}
+			
+			#clearBtn {
+				background: darkred;
+				border: none;
+				margin-top: 20px;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 17px;
+				width: 90%;
+			}
+			
+			.mui-preview-image.mui-fullscreen {
+				position: fixed;
+				z-index: 20;
+				background-color: #000;
+			}
+			
+			.mui-preview-header,
+			.mui-preview-footer {
+				position: absolute;
+				width: 100%;
+				left: 0;
+				z-index: 10;
+			}
+			
+			.mui-preview-header {
+				height: 44px;
+				top: 0;
+			}
+			
+			.mui-preview-footer {
+				height: 50px;
+				bottom: 0px;
+			}
+			
+			.mui-preview-header .mui-preview-indicator {
+				display: block;
+				line-height: 25px;
+				color: #fff;
+				text-align: center;
+				margin: 15px auto 4;
+				width: 70px;
+				background-color: rgba(0, 0, 0, 0.4);
+				border-radius: 12px;
+				font-size: 16px;
+			}
+			
+			.mui-preview-image {
+				display: none;
+				-webkit-animation-duration: 0.5s;
+				animation-duration: 0.5s;
+				-webkit-animation-fill-mode: both;
+				animation-fill-mode: both;
+			}
+			
+			.mui-preview-image.mui-preview-in {
+				-webkit-animation-name: fadeIn;
+				animation-name: fadeIn;
+			}
+			
+			.mui-preview-image.mui-preview-out {
+				background: none;
+				-webkit-animation-name: fadeOut;
+				animation-name: fadeOut;
+			}
+			
+			.mui-preview-image.mui-preview-out .mui-preview-header,
+			.mui-preview-image.mui-preview-out .mui-preview-footer {
+				display: none;
+			}
+			
+			.mui-zoom-scroller {
+				position: absolute;
+				display: -webkit-box;
+				display: -webkit-flex;
+				display: flex;
+				-webkit-box-align: center;
+				-webkit-align-items: center;
+				align-items: center;
+				-webkit-box-pack: center;
+				-webkit-justify-content: center;
+				justify-content: center;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				top: 0;
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				-webkit-backface-visibility: hidden;
+			}
+			
+			.mui-zoom {
+				-webkit-transform-style: preserve-3d;
+				transform-style: preserve-3d;
+			}
+			
+			.mui-slider .mui-slider-group .mui-slider-item img {
+				width: auto;
+				height: auto;
+				max-width: 100%;
+				max-height: 100%;
+			}
+			
+			.mui-android-4-1 .mui-slider .mui-slider-group .mui-slider-item img {
+				width: 100%;
+			}
+			
+			.mui-android-4-1 .mui-slider.mui-preview-image .mui-slider-group .mui-slider-item {
+				display: inline-table;
+			}
+			
+			.mui-android-4-1 .mui-slider.mui-preview-image .mui-zoom-scroller img {
+				display: table-cell;
+				vertical-align: middle;
+			}
+			
+			.mui-preview-loading {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				top: 0;
+				left: 0;
+				display: none;
+			}
+			
+			.mui-preview-loading.mui-active {
+				display: block;
+			}
+			
+			.mui-preview-loading .mui-spinner-white {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				margin-left: -25px;
+				margin-top: -25px;
+				height: 50px;
+				width: 50px;
+			}
+			
+			.mui-preview-image img.mui-transitioning {
+				-webkit-transition: -webkit-transform 0.5s ease, opacity 0.5s ease;
+				transition: transform 0.5s ease, opacity 0.5s ease;
+			}
+			
+			@-webkit-keyframes fadeIn {
+				0% {
+					opacity: 0;
+				}
+				100% {
+					opacity: 1;
+				}
+			}
+			
+			@keyframes fadeIn {
+				0% {
+					opacity: 0;
+				}
+				100% {
+					opacity: 1;
+				}
+			}
+			
+			@-webkit-keyframes fadeOut {
+				0% {
+					opacity: 1;
+				}
+				100% {
+					opacity: 0;
+				}
+			}
+			
+			@keyframes fadeOut {
+				0% {
+					opacity: 1;
+				}
+				100% {
+					opacity: 0;
+				}
+			}
+			
+			p img {
+				max-width: 100%;
+				height: auto;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">上传附件</h1>
+			<a id='select' class="mui-btn mui-btn-link mui-pull-right">选择</a>
+		</header>
+
+		<div class="mui-content">
+
+			<div id="imgContent">
+				<!--
+				<ul class="mui-table-view mui-card ulstyle">
+					<li class="mui-table-view-cell">
+						<div class="imgdivstyle">
+							<img src='../img/placeholder.png' class="imgstyle"/>
+						</div>
+						<div class="valuestyle">
+							<input id="ip" type="text" class="mui-input-clear" placeholder="请输入该附件标题">
+						</div>
+					</li>
+				</ul>
+				-->
+			</div>
+
+			<div id='btndiv' style="text-align: center;margin: 30px auto; visibility: hidden;">
+				<button id='okBtn' class="mui-btn mui-btn-primary oabtn">开始上传</button>
+				<button id='clearBtn' class="mui-btn mui-btn-primary oabtn">清空所选附件</button>
+				<p style="margin: 10px">所有附件上传成功后不可更改、删除</p>
+			</div>
+
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script src="../js/util.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/view.js"></script><br />
+		<script type="text/javascript" src="../js/mui.zoom.js"></script>
+		<script type="text/javascript" src="../js/mui.previewimage.js"></script>
+
+		<script type="text/javascript">
+			var select = document.getElementById('select');
+			var imgContent = document.getElementById('imgContent');
+			var okBtn = document.getElementById('okBtn');
+			var clearBtn = document.getElementById('clearBtn');
+
+			var InstanceId = '';
+
+			mui.init();
+
+			mui.previewImage();
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			window.onload = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					InstanceId = self.instanceId;
+				})
+			};
+
+			select.addEventListener('tap', function() {
+				galleryImgsSelected();
+			}, false);
+
+			okBtn.addEventListener('tap', function() {
+				if(checkTitle()) {
+					mui.confirm('所有附件上传后不可修改', '确认上传？', ['取消', '确认'], function(e) {
+						if(e.index == 1) {
+							upload();
+						}
+					});
+				}
+			}, false);
+
+			clearBtn.addEventListener('tap', function() {
+				mui.plusReady(function() {
+
+					mui.confirm('清空后不可恢复所选附件', '确认清空?', ['取消', '确认'], function(e) {
+						if(e.index == 1) {
+							var self = plus.webview.currentWebview();
+							self.reload();
+						}
+					});
+				});
+			}, false);
+
+			var lfs = null; // 保留上次选择图片列表
+			function galleryImgsSelected() {
+				// 从相册中选择图片
+				plus.gallery.pick(function(e) {
+					lfs = e.files;
+
+					document.getElementById('btndiv').style.visibility = (lfs.length == 0 ? 'hidden' : 'visible');
+
+					refreshSelectAtt();
+
+				}, function(e) {
+					console.log('取消选择图片');
+				}, {
+					filter: 'image',
+					multiple: true,
+					maximum: 9,
+					selected: lfs,
+					system: false,
+					onmaxed: function() {
+						plus.nativeUI.alert('最多只能选择9张图片');
+					}
+				}); // 最多选择3张图片
+			};
+
+			function refreshSelectAtt() {
+				// 清空附件
+				while(imgContent.hasChildNodes()) {
+					imgContent.removeChild(imgContent.firstChild);
+				}
+
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+
+				for(var i = 0; i < lfs.length; i++) {
+					var titleId = 'title_' + i;
+					var ul = document.createElement('ul');
+					ul.className = 'mui-table-view mui-card ulstyle';
+					ul.innerHTML = '<li class="mui-table-view-cell"><div class="imgdivstyle"><img src="' + lfs[i] + '" class="imgstyle" data-preview-src="" data-preview-group="1" /></div><div class="valuestyle"><input id="' + titleId + '"type="text" class="mui-input-clear" placeholder="请输入该附件标题"></div><li>';
+					fragment.appendChild(ul);
+				}
+				imgContent.appendChild(fragment);
+			};
+
+			// 上传文件
+			function upload() {
+				var server = getHost() + 'ATTManager.ashx?Commond=UploadMultipart&busId=' + InstanceId + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+
+				if(lfs.length <= 0) {
+					plus.nativeUI.alert("没有添加上传文件！");
+					return;
+				}
+				console.log("开始上传：");
+
+				var wt = plus.nativeUI.showWaiting('正在上传附件...');
+
+				var task = plus.uploader.createUpload(server, {
+						method: "POST"
+					},
+					function(t, status) { //上传完成
+						if(status == 200) {
+							//console.log("上传成功：" + t.responseText);
+							console.log("上传成功：");
+							wt.close();
+
+							mui.alert('附件上传成功', '提示', function() {
+								mui.plusReady(function() {
+									var self = plus.webview.currentWebview();
+									self.close();
+								})
+							});
+
+						} else {
+							console.log("上传失败：" + status);
+							wt.close();
+
+							mui.alert('上传失败，请重试');
+						}
+					}
+				);
+
+				for(var i = 0; i < lfs.length; i++) {
+					var title = document.getElementById('title_' + i).value;
+					console.log('===' + lfs[i] + ' -- ' + title);
+					task.addFile(lfs[i], {
+						key: title
+					});
+				}
+				task.start();
+			};
+
+			// 产生一个随机数
+			function getUid() {
+				return Math.floor(Math.random() * 100000000 + 10000000).toString();
+			}
+
+			function checkTitle() {
+				for(var i = 0; i < lfs.length; i++) {
+					var title = document.getElementById('title_' + i).value;
+					if(title.length == 0) {
+						mui.toast('每张图片都必须填写标题')
+						return false;
+					}
+				}
+
+				return true;
+			}
+		</script>
+	</body>
+
+</html>

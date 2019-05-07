@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>起草</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/parse.css" />
+		<link rel="stylesheet" type="text/css" href="../css/mui.picker.css" />
+		<link rel="stylesheet" href="../css/mui.poppicker.css" />
+		<link rel="stylesheet" href="../css/mui.dtpicker.css" />
+		<link rel="stylesheet" href="../css/oa.css" />
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">起草</h1>
+			<a id="uploadAttr" class="mui-btn mui-btn-link mui-pull-right">附件</a>
+		</header>
+
+		<div class="mui-content" style="padding-bottom: 8px;">
+			<div id="draftInfo" class="mui-card" style="border-radius:5px;">
+			</div>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/util.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/parse.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/mui.picker.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+
+		<script type="text/javascript">
+			mui.init();
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			mui('.scroll-content').scroll({
+				indicators: true //是否显示滚动条
+			});
+
+			var InstanceId = '';
+			var RecordId = '';
+			var flowAttr = '1';
+
+			window.onload = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+
+					InstanceId = self.OutPutInstanceId;
+					RecordId = self.OutPutRecordId;
+					flowAttr = self.flowAttr;
+
+					requestFormHTML(InstanceId, RecordId);
+				});
+
+			};
+
+			function requestFormHTML(InstanceId, RecordId) {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetFormObj&instanceId=' + InstanceId + '&recordId=' + RecordId + '&browModel=0&flowAttr=' + flowAttr + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						responseFormHTML(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			} // end
+
+			function responseFormHTML(resp) {
+				var parentdiv = document.getElementById('draftInfo');
+				var fragment = parseForm(resp, flowAttr, '0');
+				parentdiv.appendChild(fragment);
+			} // end
+
+			// 在parse.js中使用，在该处定义是为了方便传值
+			// 进入签核界面，
+			// 。。。。补充，这里不再跳转签核界面，而是直接走签核后的流程。
+			function gotoSignView() {
+				requestFlowNext();
+				return;
+
+				// 下面内容根据用户反馈后废弃
+				var subpage_style = {
+					top: '0px',
+					bottom: '0px'
+				};
+
+				var extra = {
+					recordId: RecordId,
+					flowAttr: flowAttr
+				};
+
+				var self = plus.webview.currentWebview();
+				var sub = plus.webview.create('sign.html', 'sign.html', subpage_style, extra);
+				self.parent().append(sub);
+			}
+
+			function requestFlowNext() {
+				showProgressDialog("正在加载...");
+
+				// flowScene 流转场景（必填）：1-流转预判，2-主控流转操作
+				var url = getHost() + 'WorkFlow.ashx?Commond=FlowNext&recordId=' + RecordId + '&optionContent=&flowAttr=' + flowAttr + '&flowScene=1&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseFlowNext(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			/*
+			 * 流程向下一环节流转，预判流转和主控流转通用接口：当符合直接流转情况时调用此接口直接流转成功，
+			 * 如果返回false则跳转到主控流转页面，选择下级工作节点+主办人|参与人（会签人）后调用此接口流转。
+			 */
+			function responseFlowNext(resp) {
+				if(resp.Result) {
+					done();
+				} else {
+					goon();
+				}
+			};
+
+			// 直接流转成功 
+			function done() {
+				mui.alert('操作成功', '提示', function() {
+
+					closeToList();
+				});
+			}
+
+			// 主控流转
+			function goon() {
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var extra = {
+						recordId: RecordId,
+						flowAttr: flowAttr,
+						optionContent: ''
+					}
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('sign_next.html', 'sign_next.html', subpage_style, extra);
+					self.parent().append(sub);
+				});
+			}
+
+			document.getElementById('uploadAttr').addEventListener('tap', function() {
+				mui.plusReady(function() {
+					var extra = {
+						recordId: RecordId,
+						instanceId: InstanceId
+					}
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('uploadAttr.html', 'uploadAttr.html', {
+						top: '0px',
+						bottom: '0px'
+					}, extra);
+					self.parent().append(sub);
+				});
+			}, false);
+		</script>
+	</body>
+
+</html>

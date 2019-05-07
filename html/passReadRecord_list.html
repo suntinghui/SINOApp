@@ -1,0 +1,633 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>传阅文件</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../css/mui.picker.css" rel="stylesheet" />
+		<link href="../css/mui.poppicker.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/oa.css" />
+		<link rel="stylesheet" href="../css/pullrefresh.css" />
+
+		<style>
+			.title {
+				color: #333333;
+				font-size: 16px;
+				font-family: "微软雅黑";
+			}
+			
+			.date {
+				font-size: 15px;
+				float: right;
+				margin-top: 5px;
+				color: #666666;
+				font-family: "微软雅黑";
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 id="title" class="mui-title">传阅文件</h1>
+			<button id="batchBtn" class="mui-btn mui-btn-danger mui-pull-right" style="display: inline;">批量</button>
+		</header>
+
+		<div class="mui-content">
+			<div id="slider" class="mui-slider mui-fullscreen">
+				<div id="sliderSegmentedControl" class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+					<a class="mui-control-item mui-active" href="#item1">
+						待阅文件
+					</a>
+					<a class="mui-control-item" href="#item2">
+						已阅文件
+					</a>
+				</div>
+
+				<div id="sliderProgressBar" class="mui-slider-progress-bar mui-col-xs-6"></div>
+
+				<!--
+                	批量操作部分，放在下面会导致闪烁，不要轻易移动位置。
+                -->
+				<div id="batchDiv" style="position: fixed; background: #fff; height:50px;padding:0 20px; width: 100%; z-index: 9999; bottom: 0px;display: none;align-items:center;">
+					<input id="checkAll" type="checkbox" name="checkAll" value="" style="justify-content:flex-start;"><span id="checkLabel" style="font-size: 14px;margin-left: 5px;">全选</span></input>
+					<div style="flex-grow:1;"></div>
+					<button id="cancelBatchBtn" class="mui-btn mui-btn-blue" style="">取消</button>
+					<button id="confirmBatchBtn" class="mui-btn mui-btn-danger" style="margin-left: 30px;">确定</button>
+				</div>
+
+				<div class="mui-slider-group">
+
+					<!--待办-->
+					<div id="item1" class="mui-slider-item mui-control-content mui-active" style="border: none;">
+
+						<div id="todoDiv" class="mui-scroll-wrapper" style="margin-bottom: 0px;">
+
+							<div class="mui-scroll" id="newPullrefresh">
+								<div id="nodata1" style="margin-top: 30px; display: none; text-align: center;">
+									<img src="../img/nodata.png" style="width: 150px; height: 150px;" />
+								</div>
+								<ul class="mui-table-view mui-table-view-striped mui-table-view-condensed" id="newList" style="margin-top: 0px;">
+								</ul>
+							</div>
+
+						</div>
+
+					</div>
+
+					<!--已办-->
+					<div id="item2" class="mui-slider-item mui-control-content" style="border: none;">
+						<div class="mui-scroll-wrapper">
+							<div class="mui-scroll" id="oldPullrefresh">
+								<div id="nodata2" style="margin-top: 30px; display: none; text-align: center;">
+									<img src="../img/nodata.png" style="width: 150px; height: 150px;" />
+								</div>
+								<ul class="mui-table-view mui-table-view-striped mui-table-view-condensed" id="oldList" style="margin-top: 0px;">
+								</ul>
+							</div>
+						</div>
+					</div>
+
+				</div>
+
+			</div>
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/constants.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/util.js"></script>
+		<script src="../js/mui.poppicker.js"></script>
+		<script src="../js/mui.picker.js"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+		<script src="../js/mui.pullToRefresh.js"></script>
+		<script src="../js/mui.pullToRefresh.material.js"></script>
+
+		<script>
+			mui.init({
+				swipeBack: false
+			});
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					backAndRefreshBadge();
+
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			var newPullupRefresh = null;
+			var newPulldownRefresh = null;
+
+			var oldPullupRefresh = null;
+			var oldPulldownRefresh = null;
+
+			(function($) {
+				//阻尼系数
+				var deceleration = mui.os.ios ? 0.003 : 0.0009;
+				$('.mui-scroll-wrapper').scroll({
+					bounce: false,
+					indicators: true, //是否显示滚动条
+					deceleration: deceleration
+				});
+
+				$.ready(function() {
+					$('#newPullrefresh').pullToRefresh({
+						down: {
+							callback: function() {
+								newPulldownRefresh = this;
+
+								var list = document.getElementById("newList");
+								// 首先清空下面的所有结点
+								while(list.hasChildNodes()) {
+									list.removeChild(list.firstChild);
+								}
+
+								newCurrentPage = 1;
+								requestNewList();
+							}
+						},
+						up: {
+							auto: true,
+							callback: function() {
+								newPullupRefresh = this;
+
+								newCurrentPage++;
+								requestNewList();
+							}
+						}
+					});
+
+					$('#oldPullrefresh').pullToRefresh({
+						down: {
+							callback: function() {
+								oldPulldownRefresh = this;
+
+								var list = document.getElementById("oldList");
+								// 首先清空下面的所有结点
+								while(list.hasChildNodes()) {
+									list.removeChild(list.firstChild);
+								}
+
+								oldCurrentPage = 1;
+								requestOldList();
+							}
+						},
+						up: {
+							auto: true,
+							callback: function() {
+								oldPullupRefresh = this;
+
+								oldCurrentPage++;
+								requestOldList();
+							}
+						}
+					});
+
+				});
+			})(mui);
+
+			// searchInfo可以通用
+			var searchInfo = {
+				RecordId: "",
+				Recipient: "",
+				ReadTime: "",
+				ReadState: "",
+				ReplyTime: "",
+				ReplyContent: "",
+				PassReadType: "",
+				InstanceId: "",
+				FlowTitle: "",
+				PassReadTitle: "",
+				Publisher: "",
+				PublishTime: "",
+				PublishTimeStart: "",
+				PublishTimeEnd: ""
+			};
+
+			mui('ul').on('tap', 'li', function(e) {
+				var param = this.getAttribute("id").split('#');
+
+				// 如果是在批量编辑列表的批量编辑模式下，设置选中与取消选中
+				if(editModel == true) {
+					var cbox = this.getElementsByTagName("input")[0]
+					cbox.checked = !cbox.checked
+					return;
+				}
+
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var extra = {
+						RecordId: param[0],
+						InstanceId: param[1]
+					}
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('passReadRecord_detail.html', 'passReadRecord_detail.html', subpage_style, extra);
+					self.parent().append(sub);
+				});
+
+			});
+		</script>
+
+		<!--查询待办列表-->
+		<script>
+			var newCurrentPage = 0; // 当前页码
+			var newTotalPages = 1; // 总页数
+
+			function requestNewList() {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var pageInfo = {
+					CurrentPage: newCurrentPage,
+					PageSize: PAGE_SIZE
+				};
+
+				var url = getHost() + "PassReadRecord.ashx?Commond=GetNoReadList&pageInfo=" + JSON.stringify(pageInfo) + "&searchInfo=" + JSON.stringify(searchInfo) + "&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						// mui有时会报错,在没有下一页时仍然刷新了,此时不理会该响应
+						if(data.ListRecord.length == 0 && data.PageInfo.CurrentPage > 1)
+							return
+
+						responseNewList(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+
+			};
+
+			function responseNewList(resp) {
+				if (resp.PageInfo.CurrentPage == 1) {
+					cancelCheckAll()
+				}
+				
+				if(resp.ListRecord.length == 0) {
+					document.getElementById('nodata1').style.display = 'block';
+					document.getElementById('newList').style.display = 'none';
+					newPullupRefresh.pullUpTips.style.display = 'none';
+					return;
+				}
+
+				document.getElementById('nodata1').style.display = 'none';
+				document.getElementById('newList').style.display = 'block';
+
+				newTotalPages = Math.ceil(resp.PageInfo.TotalRecordSize / PAGE_SIZE);
+
+				var list = document.getElementById("newList");
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+
+				var li;
+				for(var i = 0; i < resp.ListRecord.length; i++) {
+					var record = resp.ListRecord[i];
+					li = document.createElement('li');
+					li.className = 'mui-table-view-cell';
+					li.id = record.RecordId + "#" + record.InstanceId;
+					li.innerHTML = '<div class="' + currentClassList + '"><div class="mui-table-cell mui-col-xs-11" style="position: relative;"><input id="cb" class="mui-pull-right" style="display:none;top:50%;position: absolute; right:-30px;" type="checkbox" value="' + record.RecordId + '" /><p class="title">' + record.PassReadTitle + '</p><span class="date">' + record.Publisher + '&nbsp;&nbsp;' + record.PublishTime + '</span></div></div>';
+					
+					if (editModel == true) {
+						li.getElementsByTagName("input")[0].style.display = "inline"
+					}
+					
+					fragment.appendChild(li);
+				}
+				list.appendChild(fragment);
+
+				resizeCurrentFont();
+
+				if(newPulldownRefresh != null) {
+					newPulldownRefresh.endPullDownToRefresh();
+				}
+
+				if(newPullupRefresh != null) {
+					newPullupRefresh.endPullUpToRefresh((newCurrentPage >= newTotalPages));
+				}
+			};
+		</script>
+
+		<!--查询已办列表-->
+		<script>
+			var oldCurrentPage = 0; // 当前页码
+			var oldTotalPages = 1; // 总页数
+
+			function requestOldList() {
+				checkNetwork();
+
+				showProgressDialog("正在加载...");
+
+				var pageInfo = {
+					CurrentPage: oldCurrentPage,
+					PageSize: PAGE_SIZE
+				};
+
+				var url = getHost() + "PassReadRecord.ashx?Commond=GetReadedList&pageInfo=" + JSON.stringify(pageInfo) + "&searchInfo=" + JSON.stringify(searchInfo) + "&tokenKey=" + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseOldList(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+
+			};
+
+			function responseOldList(resp) {
+				if(resp.ListRecord.length == 0) {
+					document.getElementById('nodata2').style.display = 'block';
+					document.getElementById('oldList').style.display = 'none';
+					oldPullupRefresh.pullUpTips.style.display = 'none';
+					return;
+				}
+
+				document.getElementById('nodata2').style.display = 'none';
+				document.getElementById('oldList').style.display = 'block';
+
+				oldTotalPages = Math.ceil(resp.PageInfo.TotalRecordSize / PAGE_SIZE);
+
+				var list = document.getElementById("oldList");
+
+				// 开始添加新的节点
+				var fragment = document.createDocumentFragment();
+				var li;
+				for(var i = 0; i < resp.ListRecord.length; i++) {
+					var record = resp.ListRecord[i];
+					li = document.createElement('li');
+					li.className = 'mui-table-view-cell';
+					li.id = record.RecordId + "#" + record.InstanceId;
+					li.innerHTML = '<div class="mui-table mui-navigate-right"><div class="mui-table-cell mui-col-xs-11"><p class="title">' + record.PassReadTitle + '</p><span class="date">' + record.Publisher + '&nbsp;&nbsp;' + record.PublishTime + '</span></div></div>';
+					fragment.appendChild(li);
+				}
+				list.appendChild(fragment);
+
+				resizeCurrentFont();
+
+				if(oldPulldownRefresh != null) {
+					oldPulldownRefresh.endPullDownToRefresh();
+				}
+
+				if(oldPullupRefresh != null) {
+					oldPullupRefresh.endPullUpToRefresh((oldCurrentPage >= oldTotalPages));
+				}
+			};
+		</script>
+
+		<script>
+			var needBatch = true; // 表示本页面是否需要批量按纽
+			var editModel = false;  // 表示是批量界面，是否处理编辑状态下
+			
+			var currentClassList = "mui-table mui-navigate-right batchCls"
+
+			// 在待阅文件下才显示批量按纽
+			document.getElementById('slider').addEventListener('slide', function(event) {
+				var batchBtn = document.getElementById("batchBtn")
+				if(event.detail.slideNumber == 0) {
+					if (editModel == true) {
+						batchBtn.style.display = "none"
+					} else {
+						batchBtn.style.display = "inline"
+					}
+					
+					needBatch = true
+				} else {
+					batchBtn.style.display = "none"
+					
+					needBatch = false
+				}
+			});
+
+			// 批量处理事件
+			document.getElementById("batchBtn").addEventListener("tap", function(event) {
+
+				if(editModel == true) { // 非批量模式下
+					changeToNormalModel()
+					
+				} else {
+					changeToBatchModel()
+				}
+			})
+
+			function changeToBatchModel() {
+				var batchElements = document.getElementsByClassName("batchCls")
+
+				editModel = true // 切换到批量模式
+				currentClassList = "mui-table mui-navigate-right-hide batchCls"
+
+				batchModel()
+				cancelCheckAll()
+
+				for(var i = 0; i < batchElements.length; i++) {
+					var it = batchElements[i]
+
+					it.className = currentClassList
+					it.getElementsByTagName("input")[0].style.display = "inline"
+				}
+			}
+
+			function changeToNormalModel() {
+				var batchElements = document.getElementsByClassName("batchCls")
+
+				editModel = false // 切换到非批量模式下
+				currentClassList = "mui-table mui-navigate-right batchCls"
+
+				normalModel()
+
+				for(var i = 0; i < batchElements.length; i++) {
+					var it = batchElements[i]
+
+					it.className = currentClassList
+					it.getElementsByTagName("input")[0].style.display = "none"
+				}
+			}
+
+			// 取消按纽
+			document.getElementById("cancelBatchBtn").addEventListener("tap", function() {
+				changeToNormalModel()
+			})
+
+			// 确定按钮
+			document.getElementById("confirmBatchBtn").addEventListener("tap", function() {
+				var batchElements = document.getElementsByClassName("batchCls")
+
+				var checkedCount = 0;
+				for(var i = 0; i < batchElements.length; i++) {
+					var it = batchElements[i].getElementsByTagName("input")[0]
+					if(it.checked) {
+						checkedCount++
+					}
+				}
+
+				if(checkedCount == 0) {
+					mui.toast("您还没有选择文件")
+					return
+				}
+
+				mui.confirm('将选中的' + checkedCount + '个文件设为已阅状态', '确认操作？', ['取消', '确认'], function(e) {
+					if(e.index == 1) {
+						requestDoRead()
+					}
+				})
+			})
+
+			// 获取详情
+			function requestDoRead() {
+				showProgressDialog("正在加载...");
+
+				var batchElements = document.getElementsByClassName("batchCls")
+				var checkedValues = ""
+
+				for(var i = 0; i < batchElements.length; i++) {
+					var it = batchElements[i].getElementsByTagName("input")[0]
+
+					if(it.checked) {
+						checkedValues = checkedValues + it.value + ","
+					}
+				}
+				checkedValues = checkedValues.substring(0, checkedValues.length - 1)
+
+				var url = getHost() + 'PassReadRecord.ashx?Commond=DoRead&recordId=' + checkedValues + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json',
+					type: 'get',
+					timeout: TIMEOUT,
+
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseDoRead(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseDoRead(resp) {
+				if(resp.Result == false) {
+					mui.toast("操作失败，请重试")
+				} else {
+					mui.confirm('操作成功', '提示', ['确认'], function(e) {
+						if(e.index == 0) {
+							changeToNormalModel()
+
+							var list = document.getElementById("newList");
+							// 首先清空下面的所有结点
+							while(list.hasChildNodes()) {
+								list.removeChild(list.firstChild);
+							}
+
+							newCurrentPage = 1;
+							requestNewList();
+						}
+					})
+				}
+			}
+
+			// 批量模式
+			function batchModel() {
+				document.getElementById("batchBtn").style.display = "none"
+				document.getElementById("batchDiv").style.display = "flex"
+				document.getElementById("todoDiv").style.marginBottom = "50px"
+
+			}
+
+			// 正常模式
+			function normalModel() {
+				document.getElementById("batchBtn").style.display = "inline"
+				document.getElementById("batchDiv").style.display = "none"
+				document.getElementById("todoDiv").style.marginBottom = "0px"
+
+			}
+
+			// 全选状态
+			function checkAll() {
+				document.getElementById("checkLabel").innerText = "取消全选"
+				document.getElementById("checkAll").checked = true
+				document.getElementById("checkLabel").addEventListener("tap", function() {
+					cancelCheckAll()
+				})
+				document.getElementById("checkAll").addEventListener("change", function() {
+					cancelCheckAll()
+				})
+				
+
+				var batchElements = document.getElementsByClassName("batchCls")
+				for(var i = 0; i < batchElements.length; i++) {
+					batchElements[i].getElementsByTagName("input")[0].checked = true
+				}
+			}
+
+			// 取消全选状态 
+			function cancelCheckAll() {
+				document.getElementById("checkLabel").innerText = "全选"
+				document.getElementById("checkAll").checked = false
+				document.getElementById("checkLabel").addEventListener("tap", function() {
+					checkAll()
+				})
+				document.getElementById("checkAll").addEventListener("change", function() {
+					checkAll()
+				})
+
+				var batchElements = document.getElementsByClassName("batchCls")
+				for(var i = 0; i < batchElements.length; i++) {
+					batchElements[i].getElementsByTagName("input")[0].checked = false
+				}
+			}
+		</script>
+
+		<script>
+			function resizeCurrentFont() {
+				resizeFont('.title', 16);
+				resizeFont('.date', 15);
+			}
+		</script>
+
+	</body>
+
+</html>

@@ -1,0 +1,486 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>节点处理</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/oa.css" />
+		<link rel="stylesheet" href="../css/mui.picker.css" />
+		<link rel="stylesheet" href="../css/mui.poppicker.css" />
+		<link rel="stylesheet" href="../css/mui.dtpicker.css" />
+		<link rel="stylesheet" href="../css/parse.css" />
+
+		<style>
+			.mui-card {
+				padding: 10px 5px;
+			}
+			
+			.title {
+				font-size: 15px;
+				color: #666666;
+				margin-left: 10px;
+				margin-right: 10px;
+			}
+			
+			.select {
+				margin-top: 10px;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 16px;
+				text-align: left;
+				padding-left: 15px;
+			}
+			
+			#okBtn {
+				border: none;
+				padding-top: 10px;
+				padding-bottom: 10px;
+				font-size: 17px;
+			}
+			
+			.rightText {
+				float: right;
+				font-size: 15px;
+				color: #006699;
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<header id="header" class="mui-bar mui-bar-nav navbar">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left backbtn"></a>
+			<h1 class="mui-title">节点处理</h1>
+		</header>
+
+		<div class="mui-content">
+			<div class="mui-card mui-table-view mui-table-view-chevron">
+				<span class="title">流程工作节点：</span>
+				<button id='nodeSel' class="mui-btn mui-btn-block select" type='button'>请选择流程节点</button>
+			</div>
+
+			<div style=" margin-top: 10px;" id="zhubanDiv" class="mui-card mui-table-view mui-table-view-chevron">
+				<span class="title">主办人（单选）：</span>
+				<span id="zhubanAllLabel" class="rightText" style="display: none;">从所有人中选择</span>
+				<button id='zhubanSel' class="mui-btn mui-btn-block select" type='button'>请选择主办人</button>
+			</div>
+
+			<div style=" margin-top: 10px;" id="canyuDiv" class="mui-card mui-table-view mui-table-view-chevron">
+				<span class="title">参与人（多选）：</span>
+				<label id="canyuAllLabel" class="rightText" style="display: none;">从所有人中选择</label>
+				<button id='canyuSel' class="mui-btn mui-btn-block select" type='button'>请选择参与人</button>
+				<span class="title" id="canyuResultLabel"></span>
+			</div>
+
+			<div style="padding: 10px; margin-top: 20px;">
+				<button id='okBtn' class="mui-btn mui-btn-block mui-btn-primary oabtn">确&nbsp;&nbsp;定</button>
+			</div>
+
+		</div>
+
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/constants.js"></script>
+		<script src="../js/util.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/mui.picker.min.js"></script>
+		<script type="text/javascript" src="../js/mui.poppicker.js"></script>
+		<script src="../js/view.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript" src="../js/view.js"></script>
+
+		<script type="text/javascript">
+			mui.init();
+
+			mui('.mui-scroll-wrapper').scroll();
+			mui('.scroll-content').scroll({
+				indicators: true //是否显示滚动条
+			});
+
+			mui.back = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					self.close();
+				})
+			};
+
+			// 节点
+			var nodeSel = document.getElementById('nodeSel');
+			var nodeUserPicker = new mui.PopPicker();
+			// 主办
+			var zhubanDiv = document.getElementById('zhubanDiv');
+			var zhubanAllLabel = document.getElementById('zhubanAllLabel');
+			var zhubanSel = document.getElementById('zhubanSel');
+			var zhubanUserPicker = new mui.PopPicker();
+			// 参与
+			var canyuDiv = document.getElementById('canyuDiv');
+			var canyuAllLabel = document.getElementById('canyuAllLabel');
+			var canyuSel = document.getElementById('canyuSel');
+			var canyuResultLabel = document.getElementById('canyuResultLabel');
+
+			var okBtn = document.getElementById('okBtn');
+
+			var nodeId = '';
+			var sponsor = '';
+			var participant = '';
+
+			var recordId = '';
+			var flowAttr = '';
+			var optionContent = '';
+
+			var responseData = ''; // 用于参与人员多选userlist2.html
+
+			window.onload = function() {
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+					recordId = self.recordId;
+					flowAttr = self.flowAttr;
+					optionContent = self.optionContent;
+
+					requestGetNextFlowNode();
+
+					resizeCurrentFont();
+				});
+			};
+
+			// 查询工作流程节点列表
+			function requestGetNextFlowNode() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetNextFlowNode&recordId=' + recordId + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseGetNextFlowNode(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseGetNextFlowNode(data) {
+				var str = JSON.stringify(data).replace(/Name/g, "text").replace(/Id/g, "value");
+				nodeUserPicker.setData(JSON.parse(str));
+			}
+
+			// 查询流程节点详情
+			function requestNodeDetail() {
+				showProgressDialog("正在加载...");
+
+				var url = getHost() + 'WorkFlow.ashx?Commond=GetOneActivityNode&recordId=' + recordId + '&nodeId=' + nodeId + '&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseData = data;
+
+						responseNodeDetail();
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			function responseNodeDetail() {
+				// 主办人是否可以手动干预
+				// zhubanAllLabel.style.display = (responseData.SponsorCanBeInterpose ? 'block' : 'none');
+				// 参与人是否可以被干预
+				//canyuAllLabel.style.display = (responseData.ParticipantCanBeInterpose ? 'block' : 'none');
+
+				// 主办人是否显示
+				zhubanDiv.style.display = (responseData.SponsorIsDeiplay ? 'block' : 'none');
+
+				// 主办人是否从参与人范围中选择
+				if(responseData.SponsorIsSelectFromParticipant) {
+					var str = JSON.stringify(responseData.ParticipantDataSource).replace(/UserName/g, "text").replace(/UserId/g, "value");
+					zhubanUserPicker.setData(JSON.parse(str));
+				} else {
+					if(responseData.SponsorDataSource != null) {
+						zhubanSel.innerHTML = responseData.SponsorDataSource.UserName;
+						sponsor = responseData.SponsorDataSource.UserId;
+					}
+				}
+
+				allUsers = JSON.stringify(responseData.ParticipantDataSource);
+			}
+
+			nodeSel.addEventListener('tap', function() {
+				nodeUserPicker.show(function(items) {
+					nodeSel.innerHTML = items[0].text;
+					nodeId = (items[0].value - 0);
+
+					// 清空已选择项
+					zhubanSel.innerHTML = '请选择主办人';
+					sponsor = '';
+
+					participant = '';
+
+					canyuResultLabel.innerHTML = '';
+
+					requestNodeDetail();
+				});
+			}, false);
+
+			zhubanSel.addEventListener('tap', function() {
+				if(nodeId.length == 0) {
+					mui.toast('请先选择工作节点');
+					return;
+				}
+
+				zhubanAllLabel.style.display = "block";
+				// 主办人是否可以手动干预
+				zhubanAllLabel.style.display = (responseData.SponsorCanBeInterpose ? 'block' : 'none');
+
+				if(responseData.SponsorIsSelectFromParticipant) {
+					zhubanUserPicker.show(function(items) {
+						if(items.length > 0 && items[0].text) {
+							zhubanSel.innerHTML = items[0].text;
+							sponsor = (items[0].value - 0);
+						} else {
+							zhubanSel.innerHTML = "";
+							sponsor = "";
+						}
+
+					});
+				} else {
+					// 当不从参与人中选择时不做任何操作
+				}
+
+			}, false);
+
+			canyuSel.addEventListener('tap', function() {
+				if(nodeId.length == 0) {
+					mui.toast('请先选择工作节点');
+					return;
+				}
+
+				canyuAllLabel.style.display = "block";
+				// 参与人是否可以被干预
+				canyuAllLabel.style.display = (responseData.ParticipantCanBeInterpose ? 'block' : 'none');
+
+				if(responseData.ParticipantDataSource.length == 0) {
+					mui.toast('没有可选择的参与人员');
+					return;
+				}
+
+				mui.plusReady(function() {
+					var self = plus.webview.currentWebview();
+
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var extra = {
+						selectedUsers: [],
+						allUsers: (JSON.stringify(responseData.ParticipantDataSource)),
+						radioType: false,
+						firevent: 'canyu',
+						webviewId: self.id,
+						divid: 'canyu'
+					};
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('userlist2.html', 'userlist2.html', subpage_style, extra);
+					self.parent().append(sub);
+				});
+
+			}, false);
+
+			zhubanAllLabel.addEventListener('tap', function() {
+				if(nodeId.length == 0) {
+					mui.toast('请先选择工作节点');
+					return;
+				}
+
+				var self = plus.webview.currentWebview();
+
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var extra = {
+						selectedUsers: [],
+						radioType: true,
+						firevent: 'zhuban',
+						webviewId: self.id,
+						divid: 'zhuban'
+					};
+
+					var sub = plus.webview.create('userlist.html', 'userlist.html', subpage_style, extra);
+					self.parent().append(sub);
+				});
+			}, false);
+
+			canyuAllLabel.addEventListener('tap', function() {
+				if(nodeId.length == 0) {
+					mui.toast('请先选择工作节点');
+					return;
+				}
+
+				mui.plusReady(function() {
+					var subpage_style = {
+						top: '0px',
+						bottom: '0px'
+					};
+
+					var self = plus.webview.currentWebview();
+
+					var extra = {
+						selectedUsers: [],
+						radioType: false,
+						firevent: 'canyu',
+						webviewId: self.id,
+						divid: 'canyu'
+					};
+
+					var self = plus.webview.currentWebview();
+					var sub = plus.webview.create('userlist.html', 'userlist.html', subpage_style, extra);
+					self.parent().append(sub);
+				});
+
+			}, false);
+
+			mui.plusReady(function() {
+				window.addEventListener('zhuban', function(event) {
+					console.log('==========fire1');
+					//获得事件参数
+					var data = event.detail.data;
+					console.log(JSON.stringify(data));
+
+					sponsor = data.value;
+					zhubanSel.innerHTML = data.text;
+				});
+
+				window.addEventListener('canyu', function(event) {
+					console.log('==========fire2');
+					//获得事件参数
+					var data = event.detail.data;
+					console.log(JSON.stringify(data));
+
+					participant = data.value;
+
+					canyuResultLabel.innerHTML = data.text;
+				});
+
+			}); // end
+
+			okBtn.addEventListener('tap', function() {
+				if(checkValue()) {
+					requestFlowNext();
+				}
+
+			}, false);
+
+			function checkValue() {
+				if(nodeId.length == 0) {
+					mui.toast('请选择工作节点');
+					return false;
+				}
+
+				// 2表示结束结点，结束结点不需要选人
+				if((responseData.Type - 0) == 2) {
+					return true;
+				}
+
+				// 指定主办人-主控流转操作必填
+				if((responseData.Mode - 0) == 0 && sponsor.length == 0) {
+					mui.toast('请选择主办人员');
+					return false;
+				}
+				// 参与人-主控流转操作（会签、单人签发）必填
+				if((responseData.Mode - 0) > 0 && participant.length == 0) {
+					mui.toast('请选择参与人员');
+					return false;
+				}
+
+				return true;
+			}
+
+			// 流转
+			function requestFlowNext() {
+				showProgressDialog("正在加载...");
+
+				// flowScene 流转场景（必填）：1-流转预判，2-主控流转操作
+				var url = getHost() + 'WorkFlow.ashx?Commond=FlowNext&recordId=' + recordId + '&tagNodeId=' + nodeId + '&sponsor=' + sponsor + '&participant=' + participant + '&optionContent=' + escape(optionContent) + '&flowAttr=' + flowAttr + '&flowScene=2&tokenKey=' + window.localStorage.getItem(TokenKey);
+				console.log(url);
+				mui.ajax(url, {
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: TIMEOUT, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+						hideProgressDialog();
+
+						console.log(JSON.stringify(data));
+
+						responseFlowNext(data);
+					},
+					error: function(xhr, type, errorThrown) {
+						hideProgressDialog();
+
+						mui.toast(getHttpErrorDesp(type));
+					}
+				});
+			}
+
+			/*
+			 * 流程向下一环节流转，预判流转和主控流转通用接口：当符合直接流转情况时调用此接口直接流转成功，
+			 * 如果返回false则跳转到主控流转页面，选择下级工作节点+主办人|参与人（会签人）后调用此接口流转。
+			 */
+			function responseFlowNext(resp) {
+				if(resp.Result) {
+					done();
+
+				} else {
+					mui.alert(resp.Mesg, '提示', null);
+				}
+			}
+
+			// 直接流转成功 
+			function done() {
+				mui.alert('操作成功', '提示', function() {
+					closeToList();
+				});
+			}
+		</script>
+
+		<script>
+			function resizeCurrentFont() {
+				resizeFont('.select', 16);
+				resizeFont('.title', 15);
+				resizeFont('.rightText', 15);
+			}
+		</script>
+
+	</body>
+
+</html>
