@@ -80,12 +80,8 @@
         "Barcode" : {
             "description" : "管理二维码扫描插件"
         },
-        "Maps" : {
-            "description" : "管理地图插件"
-        },
-        "Speech" : {
-            "description" : "管理语音识别插件"
-        },
+        
+        
         "Webview" : {
             "description" : "窗口管理"
         },
@@ -97,9 +93,7 @@
         },
         "NativeObj" : {
             "description" : "原生对象"
-        },
-        "Statistic" : {},
-        "Push" : {}
+        },"Push":{},"Statistic":{}
     },
     "plus" : {
         "splashscreen" : {
@@ -111,20 +105,11 @@
         "signature" : "Sk9JTiBVUyBtYWlsdG86aHIyMDEzQGRjbG91ZC5pbw==", /*可选，保留给应用签名，暂不使用*/
         "distribute" : {
             "plugins" : {
-                "push" : {
-                    "igexin" : {
-                        "appid" : "o0XhJfuUQt5KbZPFUBQLj5",
-                        "appkey" : "Nz70pf6ibS88qwfW8wQ8nA",
-                        "appsecret" : "9R84trhOPu97bE0pCTguE7"
-                    }
+                "push" : {"igexin":{"appid":"9DIhU88HVo7Mt4oVZ2oOv0","appkey":"ElollzBeCn9ggwL5dsVL86","appsecret":"rp8Kw4xnSe8eJWgBLlshG3"}
+                    
                 },
-                "statics" : {
-                    "umeng" : {
-                        "appkey_ios" : "5a5a06628f4a9d318b0000ee",
-                        "channelid_ios" : "iOS",
-                        "appkey_android" : "5a5a069ff43e4805100001cc",
-                        "channelid_android" : "Android"
-                    }
+                "statics" : {"umeng":{"appkey_ios":"5a5a06628f4a9d318b0000ee","channelid_ios":"1","appkey_android":"5a5a069ff43e4805100001cc","channelid_android":"2"}
+                    
                 },
                 "speech" : {
                     "ifly" : {}
@@ -143,38 +128,7 @@
                 "keystore" : "", /*Android应用打包使用的密钥库文件*/
                 "password" : "", /*Android应用打包使用密钥库中证书的密码*/
                 "aliasname" : "", /*Android应用打包使用密钥库中证书的别名*/
-                "permissions" : [
-                    "<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_CONTACTS\"/>",
-                    "<uses-permission android:name=\"android.permission.GET_TASKS\"/>",
-                    "<uses-permission android:name=\"android.permission.VIBRATE\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_LOGS\"/>",
-                    "<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>",
-                    "<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
-                    "<uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\"/>",
-                    "<uses-permission android:name=\"android.permission.WRITE_CONTACTS\"/>",
-                    "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>",
-                    "<uses-permission android:name=\"com.android.launcher.permission.UNINSTALL_SHORTCUT\"/>",
-                    "<uses-permission android:name=\"android.permission.CAMERA\"/>",
-                    "<uses-permission android:name=\"android.permission.GET_ACCOUNTS\"/>",
-                    "<uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>",
-                    "<uses-permission android:name=\"android.permission.MODIFY_AUDIO_SETTINGS\"/>",
-                    "<uses-permission android:name=\"com.android.launcher.permission.INSTALL_SHORTCUT\"/>",
-                    "<uses-permission android:name=\"android.permission.INTERNET\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
-                    "<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>",
-                    "<uses-permission android:name=\"android.permission.CALL_PHONE\"/>",
-                    "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"/>",
-                    "<uses-feature android:name=\"android.hardware.camera\"/>",
-                    "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>",
-                    "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>",
-                    "<uses-permission android:name=\"android.permission.RECEIVE_USER_PRESENT\"/>",
-                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
-                ]
+                "permissions" : ["<uses-permission android:name=\"android.permission.GET_ACCOUNTS\"/>","<uses-permission android:name=\"android.permission.MODIFY_AUDIO_SETTINGS\"/>","<uses-permission android:name=\"com.android.launcher.permission.INSTALL_SHORTCUT\"/>","<uses-permission android:name=\"android.permission.READ_CONTACTS\"/>","<uses-permission android:name=\"android.permission.INTERNET\"/>","<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>","<uses-permission android:name=\"android.permission.VIBRATE\"/>","<uses-permission android:name=\"android.permission.READ_LOGS\"/>","<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>","<uses-permission android:name=\"android.permission.CALL_PHONE\"/>","<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>","<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>","<uses-feature android:name=\"android.hardware.camera.autofocus\"/>","<uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\"/>","<uses-permission android:name=\"android.permission.WRITE_CONTACTS\"/>","<uses-feature android:name=\"android.hardware.camera\"/>","<uses-permission android:name=\"android.permission.RECEIVE_USER_PRESENT\"/>","<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>","<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>","<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>","<uses-permission android:name=\"com.android.launcher.permission.UNINSTALL_SHORTCUT\"/>","<uses-permission android:name=\"android.permission.CAMERA\"/>"]
             },
             "orientation" : [ "portrait-primary", "portrait-secondary" ], /*应用支持的方向，portrait-primary：竖屏正方向；portrait-secondary：竖屏反方向；landscape-primary：横屏正方向；landscape-secondary：横屏反方向*/
             "icons" : {

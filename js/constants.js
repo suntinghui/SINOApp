@@ -41,12 +41,12 @@ var SavePwd = 'SavePwd';
 var CheckSavePwd = 'CheckSavePwd';
 var CheckAutoLogin = 'CheckAutoLogin';
 
-var FIR_APP_ID = '59fbe13fca87a833a400044c';
-var FIR_API_TOKEN = '9e2418f9731df097c2d8504c37179f95';
+var FIR_APP_ID = '5cd14edcca87a80c74edfacc';
+var FIR_API_TOKEN = 'c839f0ff4fcc621a9110569f173342d4';
 var FIR_CHECK_URL = 'http://api.fir.im/apps/latest/' + FIR_APP_ID + '?api_token=' + FIR_API_TOKEN;
 
-var FIR_LINK_Android = 'http://fir.im/njbw';
-var FIR_LINK_IOS = "http://fir.im/g6x";
+var FIR_LINK_Android = 'https://fir.im/watn';
+var FIR_LINK_IOS = "https://fir.im/lp9x";
 
 var FONT_SIZE = 'FONT_SIZE';
 
