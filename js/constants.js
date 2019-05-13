@@ -1,6 +1,6 @@
-var DEFAULT_HOST = '101.200.233.58:6666';
-var PM_WEBSERVICE_URL = 'http://101.200.233.58:6666/flowwebservice/services/flowWebservice?wsdl';
-var FUND_WEBSERVICE_URL = 'http://101.200.233.58:6666/MobileOffice/';
+var DEFAULT_HOST = '101.200.233.58:85';
+var PM_WEBSERVICE_URL = 'http://101.200.233.58:85/flowwebservice/services/flowWebservice?wsdl';
+var FUND_WEBSERVICE_URL = 'http://101.200.233.58:85/MobileOffice/';
 
 //var DEFAULT_HOST = 'app.crbcint.com:89';
 //var PM_WEBSERVICE_URL = 'http://pm2.crbcint.com:8091/flowwebservice/services/flowWebservice?wsdl';
